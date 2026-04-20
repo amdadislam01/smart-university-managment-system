@@ -14,6 +14,7 @@ export const metadata: Metadata = {
 };
 
 import { Navbar } from "@/components/ui/Navbar";
+import Footer from "@/components/ui/Footer";
 
 export default function RootLayout({
   children,
@@ -27,9 +28,10 @@ export default function RootLayout({
     >
       <body className={`${raleway.className} min-h-full flex flex-col bg-bg-base text-text-main selection:bg-secondary/30`}>
         <Navbar />
-        <div className="pt-[110px]">
+        <div className="pt-[110px] flex-1">
           {children}
         </div>
+        <Footer />
       </body>
     </html>
   );
