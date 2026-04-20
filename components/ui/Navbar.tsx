@@ -1,0 +1,304 @@
+"use client";
+
+import React, { useState, useEffect } from "react";
+import Link from "next/link";
+import Image from "next/image";
+import { motion, AnimatePresence } from "framer-motion";
+import { 
+  Search, 
+  Menu, 
+  X, 
+  ChevronDown, 
+  Globe, 
+  User, 
+  Library, 
+  GraduationCap, 
+  Briefcase, 
+  Users,
+  Settings,
+  BookOpen,
+  FileText,
+  HeartPulse
+} from "lucide-react";
+import { cn } from "@/lib/utils";
+
+const navLinks = [
+  { 
+    name: "About", 
+    href: "#", 
+    hasDropdown: true,
+    items: ["Historical Outline", "Vision & Mission", "Campus Map", "University Ordinance", "Senate & Syndicate"]
+  },
+  { 
+    name: "Academics", 
+    href: "#", 
+    hasDropdown: true,
+    items: ["Faculties", "Departments", "Institutes", "Academic Calendar", "Libraries", "Affiliated Colleges"]
+  },
+  { 
+    name: "Administration", 
+    href: "#", 
+    hasDropdown: true,
+    items: ["Office of the VC", "Registrar Office", "Deans of Faculties", "Chairmen of Departments", "Administrative Offices"]
+  },
+  { 
+    name: "Admission", 
+    href: "#", 
+    hasDropdown: true,
+    items: ["Undergraduate", "Graduate", "M.Phil/Ph.D", "International Students", "Scholarships", "Rules & Guidelines"]
+  },
+  { 
+    name: "Students", 
+    href: "#", 
+    hasDropdown: true,
+    items: ["Halls of Residence", "Student Login", "Results", "Health Insurance", "Transport", "Club Activities"]
+  },
+  { 
+    name: "Research", 
+    href: "#", 
+    hasDropdown: true,
+    items: ["Research Centers", "Publications", "Journals", "Funded Projects", "Innovation Lab"]
+  },
+  { 
+    name: "Quick Links", 
+    href: "#", 
+    hasDropdown: true,
+    items: ["Student Union", "JOBS", "Tenders", "Forms & Downloads", "Notices & News", "Events"]
+  },
+];
+
+const utilityLinks = [
+  { name: "Student Login", icon: GraduationCap, href: "#" },
+  { name: "Employee Login", icon: User, href: "#" },
+  { name: "Online Services", icon: Globe, href: "#" },
+  { name: "University Library", icon: Library, href: "#" },
+];
+
+export function Navbar() {
+  const [isScrolled, setIsScrolled] = useState(false);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      setIsScrolled(window.scrollY > 20);
+    };
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
+
+  return (
+    <header className="fixed top-0 left-0 right-0 z-50 transition-all duration-300">
+      {/* Top Utility Bar */}
+      <div 
+        className={cn(
+          "bg-primary text-white transition-all duration-300 overflow-hidden hidden lg:block",
+          isScrolled ? "h-0 py-0 opacity-0" : "h-auto py-2 opacity-100"
+        )}
+      >
+        <div className="container mx-auto px-4 flex justify-between items-center text-xs font-medium">
+          <div className="flex gap-6">
+            {utilityLinks.map((link) => (
+              <Link 
+                key={link.name} 
+                href={link.href} 
+                className="flex items-center gap-1.5 hover:text-secondary transition-colors"
+              >
+                <link.icon size={14} />
+                {link.name}
+              </Link>
+            ))}
+          </div>
+          <div className="flex items-center gap-6">
+             <Link href="#" className="hover:text-secondary transition-colors">Career</Link>
+             <Link href="#" className="hover:text-secondary transition-colors">Tenders</Link>
+             <Link href="#" className="hover:text-secondary transition-colors">Feedback</Link>
+            <button className="flex items-center gap-1.5 hover:text-secondary transition-colors font-bold border-l border-white/20 pl-4 uppercase tracking-wider">
+              <Search size={14} />
+              Search
+            </button>
+            <button className="hover:text-secondary transition-colors font-bold">
+              বাংলা
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* Main Navbar */}
+      <nav 
+        className={cn(
+          "w-full transition-all duration-300 border-b",
+          isScrolled 
+            ? "bg-white/95 backdrop-blur-md shadow-lg py-2 border-gray-100" 
+            : "bg-white py-3 border-transparent"
+        )}
+      >
+        <div className="container mx-auto px-4 flex justify-between items-center">
+          {/* Logo Section */}
+          <Link href="/" className="relative flex items-center gap-3 shrink-0">
+            <div className="relative w-12 h-12 lg:w-16 lg:h-16 transition-all duration-300">
+              <Image 
+                src="/logo.png" 
+                alt="NextGen University Logo" 
+                fill 
+                className="object-contain"
+                priority
+              />
+            </div>
+            <div className="flex flex-col">
+              <span className="text-primary font-bold text-lg lg:text-xl leading-tight">NextGen University</span>
+              <span className="text-secondary font-medium text-[9px] lg:text-[11px] tracking-[0.2em] uppercase">Of Bangladesh</span>
+            </div>
+          </Link>
+
+          {/* Navigation Links - Desktop */}
+          <div className="hidden lg:flex items-center gap-1 xl:gap-4">
+            {navLinks.map((link) => (
+              <div 
+                key={link.name}
+                className="relative group"
+                onMouseEnter={() => link.hasDropdown && setActiveDropdown(link.name)}
+                onMouseLeave={() => setActiveDropdown(null)}
+              >
+                <Link 
+                  href={link.href}
+                  className="px-3 xl:px-4 py-3 flex items-center gap-1 text-primary font-bold text-[13px] xl:text-[14px] hover:text-secondary transition-all"
+                >
+                  {link.name}
+                  {link.hasDropdown && (
+                    <ChevronDown size={14} className={cn("transition-transform duration-300 opacity-60", activeDropdown === link.name ? "rotate-180" : "")} />
+                  )}
+                </Link>
+                {/* Mega-style Dropdown */}
+                <AnimatePresence>
+                  {link.hasDropdown && activeDropdown === link.name && (
+                    <motion.div 
+                      initial={{ opacity: 0, y: 15 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: 15 }}
+                      transition={{ duration: 0.2 }}
+                      className="absolute top-full left-0 min-w-[240px] bg-white shadow-2xl p-4 mt-0.5 rounded-b-xl overflow-hidden"
+                    >
+                      <div className="grid gap-1">
+                        {link.items?.map((item) => (
+                          <Link 
+                            key={item}
+                            href="#"
+                            className="p-2.5 hover:bg-surface rounded-lg transition-all group/item flex items-center gap-2"
+                          >
+                             <div className="w-1.5 h-1.5 rounded-full bg-secondary scale-0 group-hover/item:scale-100 transition-transform duration-300" />
+                            <span className="text-[13px] font-semibold text-text-main group-hover/item:text-primary group-hover/item:translate-x-1 transition-all">
+                               {item}
+                            </span>
+                          </Link>
+                        ))}
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
+            ))}
+          </div>
+
+          {/* Action Button & Toggle */}
+          <div className="flex items-center gap-4">
+             <Link 
+              href="#" 
+              className="hidden sm:block bg-secondary text-primary px-5 py-2.5 rounded-md text-[13px] font-extrabold shadow-md hover:shadow-gold/20 hover:shadow-xl hover:-translate-y-0.5 transition-all duration-300 uppercase tracking-wider"
+            >
+              Apply Online
+            </Link>
+            
+            <button 
+              className="lg:hidden text-primary p-2 transition-transform active:scale-90"
+              onClick={() => setIsMobileMenuOpen(true)}
+            >
+              <Menu size={32} />
+            </button>
+          </div>
+        </div>
+      </nav>
+
+      {/* Mobile Menu Overlay */}
+      <AnimatePresence>
+        {isMobileMenuOpen && (
+          <>
+            <motion.div 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setIsMobileMenuOpen(false)}
+              className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[60] lg:hidden"
+            />
+            <motion.div 
+              initial={{ x: "100%" }}
+              animate={{ x: 0 }}
+              exit={{ x: "100%" }}
+              transition={{ type: "spring", damping: 30, stiffness: 300 }}
+              className="fixed top-0 right-0 bottom-0 w-full max-w-[320px] bg-white z-[70] lg:hidden flex flex-col shadow-2xl"
+            >
+              <div className="p-6 flex justify-between items-center border-b border-gray-100 bg-surface">
+                 <Link href="/" className="relative flex items-center gap-2">
+                  <Image src="/logo.png" alt="Logo" width={40} height={40} />
+                  <span className="text-primary font-bold text-lg">NextGen</span>
+                </Link>
+                <button 
+                  className="text-primary p-2 bg-white rounded-full shadow-md hover:rotate-90 transition-all duration-300"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                >
+                  <X size={24} />
+                </button>
+              </div>
+              
+              <div className="flex-1 overflow-y-auto p-4 space-y-2">
+                 {navLinks.map((link) => (
+                    <details key={link.name} className="group overflow-hidden rounded-xl bg-surface/50 border border-transparent open:border-gray-100 open:bg-white transition-all duration-300">
+                      <summary className="list-none p-4 flex justify-between items-center cursor-pointer font-bold text-primary group-open:text-secondary transition-colors">
+                        {link.name}
+                        {link.hasDropdown && <ChevronDown size={18} className="group-open:rotate-180 transition-transform" />}
+                      </summary>
+                      {link.hasDropdown && (
+                        <div className="px-4 pb-4 grid gap-1">
+                          {link.items?.map((item) => (
+                            <Link 
+                              key={item} 
+                              href="#" 
+                              className="p-3 bg-surface rounded-lg text-sm font-semibold text-text-main border-l-4 border-transparent hover:border-secondary hover:bg-secondary/5 transition-all"
+                            >
+                              {item}
+                            </Link>
+                          ))}
+                        </div>
+                      )}
+                    </details>
+                 ))}
+
+                 <div className="mt-8 pt-6 border-t border-gray-100 grid grid-cols-2 gap-3 p-2">
+                    {utilityLinks.map((link) => (
+                      <Link 
+                        key={link.name} 
+                        href={link.href}
+                        className="flex flex-col items-center gap-2 p-4 bg-surface rounded-xl hover:bg-secondary/10 transition-all duration-300 group"
+                      >
+                        <link.icon size={20} className="text-primary group-hover:text-secondary group-hover:scale-110 transition-all" />
+                        <span className="text-[10px] font-bold text-center uppercase tracking-tighter text-gray-400 group-hover:text-primary">{link.name}</span>
+                      </Link>
+                    ))}
+                 </div>
+              </div>
+
+              <div className="p-6 bg-surface/30">
+                <Link 
+                  href="#" 
+                  className="block w-full bg-primary text-secondary text-center py-4 rounded-xl font-extrabold text-lg shadow-xl active:scale-95 transition-transform"
+                >
+                  Apply Online
+                </Link>
+              </div>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
+    </header>
+  );
+}
