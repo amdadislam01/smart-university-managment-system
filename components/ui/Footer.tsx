@@ -206,8 +206,8 @@ export default function Footer() {
             <p>&copy; {currentYear} NextGen University of Bangladesh. All rights reserved.</p>
             <span className="hidden md:block w-px h-4 bg-white/10" />
             <div className="flex gap-4">
-              <Link href="#" className="hover:text-secondary transition-colors italic">Privacy Policy</Link>
-              <Link href="#" className="hover:text-secondary transition-colors italic">Terms of Use</Link>
+              <Link href="#" className="hover:text-secondary transition-colors  ">Privacy Policy</Link>
+              <Link href="#" className="hover:text-secondary transition-colors  ">Terms of Use</Link>
             </div>
           </div>
           
