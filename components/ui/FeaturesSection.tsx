@@ -173,7 +173,7 @@ export default function FeaturesSection() {
             className="text-5xl lg:text-6xl font-black text-primary leading-[1.05] mb-10 tracking-tight"
           >
             Essential Features of <br/>
-            <span className="relative inline-block mt-2 font-serif italic text-secondary">
+            <span className="relative inline-block mt-2 font-serif   text-secondary">
               NextGen University
               <motion.span 
                 initial={{ width: 0 }}
