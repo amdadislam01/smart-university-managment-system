@@ -94,7 +94,7 @@ export default function AboutSection() {
               <div className="absolute -inset-4 bg-gradient-to-tr from-secondary to-primary opacity-20 blur-2xl group-hover:opacity-30 transition-opacity duration-500 rounded-[2rem]" />
               <div className="relative aspect-[4/5] rounded-[2rem] overflow-hidden border border-primary/5 shadow-2xl shadow-primary/10">
                 <Image
-                  src="/about-university.png"
+                  src="/campus-hero.png"
                   alt="NextGen University Campus"
                   fill
                   className="object-cover transition-transform duration-700 group-hover:scale-105"
@@ -127,7 +127,7 @@ export default function AboutSection() {
               whileInView={{ scale: 1, opacity: 1 }}
               viewport={{ once: true }}
               transition={{ delay: 0.5, duration: 0.5 }}
-              className="absolute -top-6 -right-6 lg:-right-12 bg-secondary text-primary px-8 py-6 rounded-3xl font-bold flex flex-col items-center shadow-xl rotate-3"
+              className="absolute -top-6 -right-6 lg:-right-12 bg-secondary text-primary px-8 py-6 rounded-3xl font-bold flex flex-col items-center shadow-xl"
             >
               <span className="text-3xl font-black">100%</span>
               <span className="text-xs uppercase tracking-widest font-black leading-tight text-center">Smart<br/>Education</span>
@@ -155,7 +155,7 @@ export default function AboutSection() {
                 className="text-4xl lg:text-5xl font-black text-primary leading-[1.1]"
               >
                 NextGen University <br/>
-                <span className="text-secondary italic">of Bangladesh</span>
+                <span className="text-secondary  ">of Bangladesh</span>
               </motion.h2>
             </div>
 
