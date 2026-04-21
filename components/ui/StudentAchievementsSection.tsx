@@ -93,7 +93,7 @@ export default function StudentAchievementsSection() {
             viewport={{ once: true }}
             className="text-5xl lg:text-6xl font-black text-primary leading-tight tracking-tight mb-8"
           >
-            All <span className="text-secondary italic">Achievements</span>
+            All <span className="text-secondary  ">Achievements</span>
           </motion.h2>
           
           <motion.p
