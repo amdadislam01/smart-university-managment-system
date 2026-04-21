@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
+import { usePathname } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { 
   Search, 
@@ -42,14 +43,23 @@ const navLinks = [
     items: [
       { name: "Faculties", href: "/academics/faculties" },
       { name: "Departments", href: "/academics/departments" },
-      "Institutes", "Academic Calendar", "Libraries", "Affiliated Colleges"
+      { name: "Institutes", href: "/academics/institutes" },
+      { name: "Academic Calendar", href: "/academics/academic-calendar" },
+      { name: "Libraries", href: "/academics/libraries" },
+      { name: "Affiliated Colleges", href: "/academics/affiliated-colleges" }
     ]
   },
   { 
     name: "Administration", 
     href: "#", 
     hasDropdown: true,
-    items: ["Office of the VC", "Registrar Office", "Deans of Faculties", "Chairmen of Departments", "Administrative Offices"]
+    items: [
+      { name: "Office of the VC", href: "/administration/office-of-vc" },
+      { name: "Registrar Office", href: "/administration/registrar-office" },
+      { name: "Deans of Faculties", href: "/administration/deans" },
+      { name: "Chairmen of Departments", href: "/administration/chairmen" },
+      { name: "Administrative Offices", href: "/administration/administrative-offices" }
+    ]
   },
   { 
     name: "Admission", 
@@ -85,9 +95,22 @@ const utilityLinks = [
 ];
 
 export function Navbar() {
+  const pathname = usePathname();
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
+
+  // Helper to check if a link or any of its sub-items are active
+  const isLinkActive = (link: typeof navLinks[0]) => {
+    if (link.href !== "#" && pathname === link.href) return true;
+    if (link.items) {
+      return link.items.some(item => {
+        const itemHref = typeof item === "string" ? "#" : item.href;
+        return pathname === itemHref;
+      });
+    }
+    return false;
+  };
 
   useEffect(() => {
     const handleScroll = () => {
@@ -172,11 +195,22 @@ export function Navbar() {
               >
                 <Link 
                   href={link.href}
-                  className="px-3 xl:px-4 py-3 flex items-center gap-1 text-primary font-bold text-[13px] xl:text-[14px] hover:text-secondary transition-all"
+                  className={cn(
+                    "px-3 xl:px-4 py-3 flex items-center gap-1 font-bold text-[13px] xl:text-[14px] transition-all relative group",
+                    isLinkActive(link) ? "text-secondary" : "text-primary hover:text-secondary"
+                  )}
                 >
                   {link.name}
                   {link.hasDropdown && (
                     <ChevronDown size={14} className={cn("transition-transform duration-300 opacity-60", activeDropdown === link.name ? "rotate-180" : "")} />
+                  )}
+                  
+                  {isLinkActive(link) && (
+                    <motion.div 
+                      layoutId="activeNav"
+                      className="absolute bottom-0 left-3 xl:left-4 right-3 xl:right-4 h-0.5 bg-secondary rounded-full"
+                      transition={{ type: "spring", stiffness: 380, damping: 30 }}
+                    />
                   )}
                 </Link>
                 {/* Mega-style Dropdown */}
@@ -197,10 +231,19 @@ export function Navbar() {
                             <Link 
                               key={itemName}
                               href={itemHref}
-                              className="p-2.5 hover:bg-surface rounded-lg transition-all group/item flex items-center gap-2"
+                              className={cn(
+                                "p-2.5 rounded-lg transition-all group/item flex items-center gap-2",
+                                pathname === itemHref ? "bg-secondary/10" : "hover:bg-surface"
+                              )}
                             >
-                               <div className="w-1.5 h-1.5 rounded-full bg-secondary scale-0 group-hover/item:scale-100 transition-transform duration-300" />
-                              <span className="text-[13px] font-semibold text-text-main group-hover/item:text-primary group-hover/item:translate-x-1 transition-all">
+                               <div className={cn(
+                                 "w-1.5 h-1.5 rounded-full bg-secondary transition-transform duration-300",
+                                 pathname === itemHref ? "scale-100" : "scale-0 group-hover/item:scale-100"
+                               )} />
+                              <span className={cn(
+                                "text-[13px] font-semibold transition-all",
+                                pathname === itemHref ? "text-primary translate-x-1" : "text-text-main group-hover/item:text-primary group-hover/item:translate-x-1"
+                              )}>
                                  {itemName}
                               </span>
                             </Link>
@@ -267,7 +310,10 @@ export function Navbar() {
               <div className="flex-1 overflow-y-auto p-4 space-y-2">
                  {navLinks.map((link) => (
                     <details key={link.name} className="group overflow-hidden rounded-xl bg-surface/50 border border-transparent open:border-gray-100 open:bg-white transition-all duration-300">
-                      <summary className="list-none p-4 flex justify-between items-center cursor-pointer font-bold text-primary group-open:text-secondary transition-colors">
+                      <summary className={cn(
+                        "list-none p-4 flex justify-between items-center cursor-pointer font-bold transition-colors",
+                        isLinkActive(link) ? "text-secondary" : "text-primary group-open:text-secondary"
+                      )}>
                         {link.name}
                         {link.hasDropdown && <ChevronDown size={18} className="group-open:rotate-180 transition-transform" />}
                       </summary>
@@ -280,7 +326,12 @@ export function Navbar() {
                               <Link 
                                 key={itemName} 
                                 href={itemHref} 
-                                className="p-3 bg-surface rounded-lg text-sm font-semibold text-text-main border-l-4 border-transparent hover:border-secondary hover:bg-secondary/5 transition-all"
+                                className={cn(
+                                  "p-3 rounded-lg text-sm font-semibold border-l-4 transition-all",
+                                  pathname === itemHref 
+                                    ? "bg-secondary/10 text-primary border-secondary" 
+                                    : "bg-surface text-text-main border-transparent hover:border-secondary hover:bg-secondary/5"
+                                )}
                               >
                                 {itemName}
                               </Link>
