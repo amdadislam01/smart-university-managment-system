@@ -127,7 +127,7 @@ export default function EventsAndNoticesSection() {
                   viewport={{ once: true }}
                   className="text-4xl lg:text-5xl font-black text-primary leading-tight tracking-tight"
                 >
-                  Upcoming <span className="text-secondary italic">Events</span>
+                  Upcoming <span className="text-secondary  ">Events</span>
                 </motion.h2>
               </div>
               <motion.button
@@ -230,7 +230,7 @@ export default function EventsAndNoticesSection() {
                 viewport={{ once: true }}
                 className="text-4xl font-black text-primary leading-tight tracking-tight"
               >
-                Latest <span className="text-secondary italic">Notices</span>
+                Latest <span className="text-secondary  ">Notices</span>
               </motion.h2>
             </div>
 
