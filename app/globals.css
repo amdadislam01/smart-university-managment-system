@@ -2,7 +2,7 @@
 
 :root {
   --color-primary: #0F2E5D;
-  --color-secondary: #D4AF37;
+  --color-secondary: #dfb839;
   --color-bg-base: #FFFFFF;
   --color-surface: #F8FAFC;
   --color-text-main: #1E293B;
@@ -10,7 +10,7 @@
 
 @theme {
   --color-primary: #0F2E5D;
-  --color-secondary: #D4AF37;
+  --color-secondary: #dfb839;
   --color-bg-base: #FFFFFF;
   --color-surface: #F8FAFC;
   --color-text-main: #1E293B;
