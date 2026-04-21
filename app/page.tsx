@@ -2,6 +2,8 @@ import HeroSection from "@/components/ui/HeroSection";
 import AboutSection from "@/components/ui/AboutSection";
 import FeaturesSection from "@/components/ui/FeaturesSection";
 import NewsSection from "@/components/ui/NewsSection";
+import EventsAndNoticesSection from "@/components/ui/EventsAndNoticesSection";
+import StudentAchievementsSection from "@/components/ui/StudentAchievementsSection";
 
 export default function Home() {
   return (
@@ -9,6 +11,8 @@ export default function Home() {
       <HeroSection />
       <AboutSection />
       <FeaturesSection />
+      <EventsAndNoticesSection />
+      <StudentAchievementsSection />
       <NewsSection />
     </main>
   );
