@@ -109,7 +109,7 @@ export default function NewsSection() {
             className="text-5xl lg:text-6xl font-black text-primary leading-[1.05] mb-10 tracking-tight"
           >
             Latest News & <br/>
-            <span className="relative inline-block mt-2 font-serif italic text-secondary">
+            <span className="relative inline-block mt-2 font-serif   text-secondary">
                Academic Updates
               <motion.span 
                 initial={{ width: 0 }}
@@ -125,9 +125,9 @@ export default function NewsSection() {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ delay: 0.2 }}
-            className="text-xl lg:text-2xl text-text-main/40 max-w-3xl mx-auto font-medium leading-relaxed italic"
+            className="text-xl lg:text-2xl text-text-main/40 max-w-3xl mx-auto font-medium leading-relaxed  "
           >
-            Facilitating excellence through transparency, digital transformation, and professional communication across <span className="text-primary font-bold not-italic">NextGen University</span>.
+            Facilitating excellence through transparency, digital transformation, and professional communication across <span className="text-primary font-bold not- ">NextGen University</span>.
           </motion.p>
         </div>
 
