@@ -29,17 +29,21 @@ const navLinks = [
     hasDropdown: true,
     items: [
       { name: "Historical Outline", href: "/about/history" },
-      { name: "Vision & Mission", href: "#" },
-      { name: "Campus Map", href: "#" },
-      { name: "University Ordinance", href: "#" },
-      { name: "Senate & Syndicate", href: "#" }
+      { name: "Vision & Mission", href: "/about/vision-mission" },
+      { name: "Campus Map", href: "/about/campus-map" },
+      { name: "University Ordinance", href: "/about/ordinance" },
+      { name: "Senate & Syndicate", href: "/about/senate-syndicate" }
     ]
   },
   { 
     name: "Academics", 
     href: "#", 
     hasDropdown: true,
-    items: ["Faculties", "Departments", "Institutes", "Academic Calendar", "Libraries", "Affiliated Colleges"]
+    items: [
+      { name: "Faculties", href: "/academics/faculties" },
+      { name: "Departments", href: "/academics/departments" },
+      "Institutes", "Academic Calendar", "Libraries", "Affiliated Colleges"
+    ]
   },
   { 
     name: "Administration", 
