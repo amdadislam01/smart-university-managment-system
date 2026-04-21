@@ -27,7 +27,13 @@ const navLinks = [
     name: "About", 
     href: "#", 
     hasDropdown: true,
-    items: ["Historical Outline", "Vision & Mission", "Campus Map", "University Ordinance", "Senate & Syndicate"]
+    items: [
+      { name: "Historical Outline", href: "/about/history" },
+      { name: "Vision & Mission", href: "#" },
+      { name: "Campus Map", href: "#" },
+      { name: "University Ordinance", href: "#" },
+      { name: "Senate & Syndicate", href: "#" }
+    ]
   },
   { 
     name: "Academics", 
@@ -180,18 +186,22 @@ export function Navbar() {
                       className="absolute top-full left-0 min-w-[240px] bg-white shadow-2xl p-4 mt-0.5 rounded-b-xl overflow-hidden"
                     >
                       <div className="grid gap-1">
-                        {link.items?.map((item) => (
-                          <Link 
-                            key={item}
-                            href="#"
-                            className="p-2.5 hover:bg-surface rounded-lg transition-all group/item flex items-center gap-2"
-                          >
-                             <div className="w-1.5 h-1.5 rounded-full bg-secondary scale-0 group-hover/item:scale-100 transition-transform duration-300" />
-                            <span className="text-[13px] font-semibold text-text-main group-hover/item:text-primary group-hover/item:translate-x-1 transition-all">
-                               {item}
-                            </span>
-                          </Link>
-                        ))}
+                        {link.items?.map((item) => {
+                          const itemName = typeof item === "string" ? item : item.name;
+                          const itemHref = typeof item === "string" ? "#" : item.href;
+                          return (
+                            <Link 
+                              key={itemName}
+                              href={itemHref}
+                              className="p-2.5 hover:bg-surface rounded-lg transition-all group/item flex items-center gap-2"
+                            >
+                               <div className="w-1.5 h-1.5 rounded-full bg-secondary scale-0 group-hover/item:scale-100 transition-transform duration-300" />
+                              <span className="text-[13px] font-semibold text-text-main group-hover/item:text-primary group-hover/item:translate-x-1 transition-all">
+                                 {itemName}
+                              </span>
+                            </Link>
+                          );
+                        })}
                       </div>
                     </motion.div>
                   )}
@@ -259,15 +269,19 @@ export function Navbar() {
                       </summary>
                       {link.hasDropdown && (
                         <div className="px-4 pb-4 grid gap-1">
-                          {link.items?.map((item) => (
-                            <Link 
-                              key={item} 
-                              href="#" 
-                              className="p-3 bg-surface rounded-lg text-sm font-semibold text-text-main border-l-4 border-transparent hover:border-secondary hover:bg-secondary/5 transition-all"
-                            >
-                              {item}
-                            </Link>
-                          ))}
+                          {link.items?.map((item) => {
+                            const itemName = typeof item === "string" ? item : item.name;
+                            const itemHref = typeof item === "string" ? "#" : item.href;
+                            return (
+                              <Link 
+                                key={itemName} 
+                                href={itemHref} 
+                                className="p-3 bg-surface rounded-lg text-sm font-semibold text-text-main border-l-4 border-transparent hover:border-secondary hover:bg-secondary/5 transition-all"
+                              >
+                                {itemName}
+                              </Link>
+                            );
+                          })}
                         </div>
                       )}
                     </details>
