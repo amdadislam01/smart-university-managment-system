@@ -46,7 +46,7 @@ export default function HistoricalOutlinePage() {
             </div>
             <h1 className="text-5xl lg:text-7xl font-black text-white leading-tight tracking-tight">
               Our Legacy & <br/>
-              <span className="text-secondary italic font-serif">Historical Journey</span>
+              <span className="text-secondary   font-serif">Historical Journey</span>
             </h1>
             <p className="text-xl lg:text-2xl text-white/70 max-w-3xl mx-auto font-medium leading-relaxed">
                From a vision of digital empowerment to becoming the region's leading smart academic institution.
@@ -75,7 +75,7 @@ export default function HistoricalOutlinePage() {
                 <div className="w-12 h-1.5 bg-secondary rounded-full" />
                 <h2 className="text-4xl lg:text-5xl font-black text-primary leading-tight tracking-tight">
                   A Beacon of <br/>
-                  <span className="text-secondary italic">Modern Education</span>
+                  <span className="text-secondary  ">Modern Education</span>
                 </h2>
               </div>
 
@@ -127,7 +127,7 @@ export default function HistoricalOutlinePage() {
       {/* Timeline Section */}
       <section className="bg-surface relative pt-12">
          <div className="text-center space-y-4 mb-12">
-            <h2 className="text-3xl lg:text-4xl font-black text-primary tracking-tight uppercase">Journey Through <span className="text-secondary italic">Time</span></h2>
+            <h2 className="text-3xl lg:text-4xl font-black text-primary tracking-tight uppercase">Journey Through <span className="text-secondary  ">Time</span></h2>
             <div className="w-24 h-1 bg-secondary mx-auto rounded-full" />
          </div>
          <HistoryTimeline />
