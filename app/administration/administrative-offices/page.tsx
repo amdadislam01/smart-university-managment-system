@@ -225,7 +225,7 @@ export default function AdministrativeOfficesPage() {
                <div className="lg:w-1/2 space-y-10">
                   <div className="space-y-4">
                      <span className="text-secondary font-black text-sm uppercase tracking-widest">Service Delivery</span>
-                     <h2 className="text-5xl lg:text-7xl font-black text-primary uppercase leading-tight tracking-tighter">
+                     <h2 className="text-5xl lg:text-6xl font-black text-primary uppercase leading-tight tracking-tighter">
                         Institutional <br /> <span className="text-secondary font-serif">Support</span> Systems
                      </h2>
                   </div>
