@@ -64,7 +64,7 @@ export default function RulesPage() {
   return (
     <main className="flex flex-col min-h-screen bg-white">
       {/* Authoritative Hero Section */}
-      <section className="relative h-[70vh] min-h-[550px] flex items-center justify-center overflow-hidden">
+      <section className="relative h-[40vh] min-h-[450px] flex items-center justify-center overflow-hidden">
         <Image
           src="/admission/rules-hero.png"
           alt="University Architecture"
@@ -75,26 +75,28 @@ export default function RulesPage() {
         <div className="absolute inset-0 bg-primary/85 backdrop-blur-[2px]" />
         
         <div className="container mx-auto px-4 relative z-10 text-center">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8 }}
-            className="max-w-4xl mx-auto space-y-8"
-          >
-            <div className="inline-flex items-center gap-3 px-6 py-2 rounded-full bg-white/5 border border-white/10 text-secondary shadow-2xl mx-auto">
-              <Scale size={18} />
-              <span className="text-xs font-black uppercase tracking-[0.4em]">Institutional Governance</span>
-            </div>
-            
-            <h1 className="text-5xl lg:text-8xl font-black text-white leading-tight uppercase tracking-tighter">
-              Governing <br/>
-              <span className="text-secondary font-serif normal-case tracking-tight text-6xl lg:text-[7.5rem]">Principles</span>
-            </h1>
-            
-            <p className="text-lg lg:text-xl text-white/50 max-w-2xl mx-auto font-medium leading-relaxed">
-              "Honesty, Transparency, and Excellence: The pillars upon which our academic community is built."
-            </p>
-          </motion.div>
+          <div className="max-w-4xl mx-auto space-y-12">
+            <motion.div
+              initial={{ opacity: 0, y: 30 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 1, ease: [0.16, 1, 0.3, 1] }}
+              className="space-y-8"
+            >
+              <div className="inline-flex items-center gap-3 px-6 py-2 rounded-full bg-white/5 backdrop-blur-md border border-white/20 text-secondary shadow-xl overflow-hidden group">
+                <Scale size={14} className="group-hover:rotate-12 transition-transform" />
+                <span className="text-[11px] font-black uppercase tracking-[0.4em]">Institutional Governance</span>
+              </div>
+              
+              <h1 className="text-5xl lg:text-5xl font-black text-white leading-[1.05] uppercase tracking-tighter">
+                Governing <br/>
+                <span className="text-secondary font-serif normal-case tracking-tight italic opacity-90">Principles</span>
+              </h1>
+              
+              <p className="text-lg lg:text-xl text-white/70 max-w-2xl mx-auto font-medium leading-relaxed">
+                "Honesty, Transparency, and Excellence: The pillars upon which our academic community is built."
+              </p>
+            </motion.div>
+          </div>
         </div>
       </section>
 
@@ -220,14 +222,6 @@ export default function RulesPage() {
                        </button>
                      ))}
                   </div>
-               </div>
-            </div>
-            
-            <div className="mt-16 text-center space-y-4">
-               <p className="text-text-main/30 font-bold uppercase text-[9px] tracking-[0.3em]">Last updated: April 22, 2026 • Office of the Registrar</p>
-               <div className="flex justify-center gap-8">
-                  <Link href="#" className="text-primary hover:text-secondary text-[10px] font-black uppercase tracking-widest">Privacy Policy</Link>
-                  <Link href="#" className="text-primary hover:text-secondary text-[10px] font-black uppercase tracking-widest">Term of Use</Link>
                </div>
             </div>
          </div>
