@@ -176,7 +176,7 @@ export default function OfficeOfVCPage() {
                      <div className="h-2 w-24 bg-secondary rounded-full" />
                   </div>
                   
-                  <div className="space-y-6 text-text-main/60 font-medium text-xl italic leading-relaxed font-serif">
+                  <div className="space-y-6 text-text-main/60 font-medium text-xl   leading-relaxed font-serif">
                      <p>&ldquo;NextGen University is more than an institution; it is a cradle of innovation and human values. Our mission is to empower the youth of Bangladesh with global standards of knowledge while rooted in our deep cultural heritage.&rdquo;</p>
                      <p>&ldquo;In this digital era, we are committed to building a Smarter University—one that fosters critical thinking, research impact, and entrepreneurial spirit. I invite you all to join us in this journey of transformation.&rdquo;</p>
                   </div>
