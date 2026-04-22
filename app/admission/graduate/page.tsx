@@ -2,14 +2,10 @@
 
 import React from "react";
 import Image from "next/image";
-import Link from "next/link";
 import { motion } from "framer-motion";
 import { 
-  Dna, 
-  Cpu, 
   Globe, 
   Lightbulb, 
-  TrendingUp, 
   Users, 
   ArrowRight, 
   CheckCircle,
@@ -17,15 +13,13 @@ import {
   Award,
   BookOpenCheck,
   Building,
-  Sparkles
 } from "lucide-react";
-import { cn } from "@/lib/utils";
 
 const GraduatePage = () => {
   return (
     <main className="flex flex-col min-h-screen">
       {/* Advanced Hero Section */}
-      <section className="relative h-screen min-h-[700px] flex items-center justify-center overflow-hidden">
+      <section className="relative flex items-center justify-center overflow-hidden h-[60vh] min-h-[650px]">
         <Image
           src="/admission/graduate-hero.png"
           alt="Graduate Research Excellence"
@@ -35,33 +29,33 @@ const GraduatePage = () => {
         />
         <div className="absolute inset-0 bg-primary/70 backdrop-blur-[2px]" />
         
-        <div className="container mx-auto px-4 relative z-10 text-center lg:text-left">
-          <div className="max-w-4xl space-y-10">
+        <div className="container mx-auto px-4 relative z-10 text-center">
+          <div className="max-w-4xl mx-auto space-y-12">
             <motion.div
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ duration: 0.8 }}
-              className="space-y-6"
+              initial={{ opacity: 0, y: 30 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 1, ease: [0.16, 1, 0.3, 1] }}
+              className="space-y-8"
             >
-              <div className="inline-flex items-center gap-3 px-5 py-2 rounded-full bg-white/5 backdrop-blur-md border border-white/10 text-secondary shadow-2xl">
-                 <Award size={18} />
-                 <span className="text-xs font-black uppercase tracking-[0.3em]">Master your Future</span>
+              <div className="inline-flex items-center gap-2 px-6 py-2 rounded-full bg-white/5 backdrop-blur-md border border-white/20 text-secondary shadow-xl overflow-hidden group">
+                 <Award size={14} className="group-hover:rotate-12 transition-transform" />
+                 <span className="text-[11px] font-black uppercase tracking-[0.4em]">Master your Future</span>
               </div>
               
-              <h1 className="text-6xl lg:text-9xl font-black text-white leading-[0.9] uppercase tracking-tighter">
+              <h1 className="text-5xl lg:text-6xl font-black text-white leading-[1.05] uppercase tracking-tighter">
                 Lead the <br/>
-                <span className="text-secondary font-serif text-7xl lg:text-[10rem] normal-case tracking-tight">Frontier</span>
+                <span className="text-secondary font-serif normal-case tracking-tight italic opacity-90">Frontier</span>
               </h1>
               
-              <p className="text-xl lg:text-2xl text-white/60 max-w-2xl font-light leading-relaxed">
+              <p className="text-lg lg:text-xl text-white/70 max-w-2xl mx-auto font-medium leading-relaxed">
                 Join our elite graduate community. We empower scholars to push the boundaries of knowledge and address the world's most complex challenges.
               </p>
               
-              <div className="flex flex-wrap gap-6 pt-6 justify-center lg:justify-start">
-                <button className="px-12 py-5 bg-secondary text-primary rounded-full font-black uppercase tracking-widest text-sm hover:bg-white transition-all shadow-2xl shadow-secondary/20">
+              <div className="flex flex-wrap gap-5 pt-8 justify-center">
+                <button className="px-12 py-5 bg-secondary text-primary rounded-2xl font-black uppercase tracking-[0.15em] text-sm hover:scale-[1.02] transition-all shadow-[0_20px_50px_rgba(255,191,0,0.15)] active:scale-95">
                   Apply for Admission
                 </button>
-                <button className="px-12 py-5 border-2 border-white/10 text-white rounded-full font-black uppercase tracking-widest text-sm hover:bg-white hover:text-primary transition-all">
+                <button className="px-12 py-5 border border-white/20 text-white rounded-2xl font-black uppercase tracking-[0.15em] text-sm hover:bg-white hover:text-primary transition-all backdrop-blur-sm active:scale-95">
                   Request Information
                 </button>
               </div>
@@ -94,7 +88,7 @@ const GraduatePage = () => {
               
               <div className="space-y-12">
                  <div className="space-y-4">
-                    <h2 className="text-4xl lg:text-6xl font-black text-primary uppercase leading-none">Research <br/>Frontiers</h2>
+                    <h2 className="text-4xl lg:text-5xl font-black text-primary uppercase leading-none">Research <br/>Frontiers</h2>
                     <div className="w-32 h-2 bg-secondary rounded-full" />
                  </div>
                  
@@ -129,7 +123,7 @@ const GraduatePage = () => {
       <section className="py-32 bg-surface">
         <div className="container mx-auto px-4">
            <div className="text-center max-w-3xl mx-auto mb-20 space-y-6">
-              <h2 className="text-4xl lg:text-6xl font-black text-primary uppercase tracking-tight leading-none">Advanced <span className="text-secondary font-serif normal-case">Programs</span></h2>
+              <h2 className="text-4xl lg:text-5xl font-black text-primary uppercase tracking-tight leading-none">Advanced <span className="text-secondary font-serif normal-case">Programs</span></h2>
               <p className="text-text-main/60 text-lg font-medium">Choose a path that aligns with your professional aspirations and intellectual curiosity.</p>
            </div>
            
@@ -184,7 +178,7 @@ const GraduatePage = () => {
               
               <div className="relative z-10 grid grid-cols-1 lg:grid-cols-2 gap-20 items-center">
                  <div className="space-y-8">
-                    <h2 className="text-5xl lg:text-7xl font-black text-white uppercase leading-[0.9] tracking-tighter">Scholars into <br/><span className="text-secondary font-serif   normal-case">Leaders</span></h2>
+                    <h2 className="text-5xl lg:text-6xl font-black text-white uppercase leading-[0.9] tracking-tighter">Scholars into <br/><span className="text-secondary font-serif   normal-case">Leaders</span></h2>
                     <p className="text-xl text-white/50 max-w-xl leading-relaxed font-light">
                       Our graduates are making waves in Fortune 500 companies, Ivy League institutions, and global non-profits. We don't just grant degrees; we build career legacies.
                     </p>
