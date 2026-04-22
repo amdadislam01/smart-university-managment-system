@@ -57,7 +57,7 @@ export default function MPhilPhDPage() {
   return (
     <main className="flex flex-col min-h-screen">
       {/* Authoritative Hero Section */}
-      <section className="relative h-screen min-h-[700px] flex items-center justify-center overflow-hidden">
+      <section className="relative h-[60vh] min-h-[650px] flex items-center justify-center overflow-hidden">
         <Image
           src="/admission/phd-hero.png"
           alt="Advanced Doctoral Research"
@@ -68,43 +68,45 @@ export default function MPhilPhDPage() {
         <div className="absolute inset-0 bg-primary/80 backdrop-blur-[4px]" />
         
         <div className="container mx-auto px-4 relative z-10 text-center">
-          <motion.div
-            initial={{ opacity: 0, scale: 0.98 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 1 }}
-            className="space-y-10"
-          >
-            <div className="inline-flex items-center gap-3 px-6 py-2 rounded-full bg-white/5 border border-white/10 text-secondary shadow-2xl">
-              <Sparkles size={18} />
-              <span className="text-xs font-black uppercase tracking-[0.4em]">Expanding Human Knowledge</span>
-            </div>
-            
-            <h1 className="text-6xl lg:text-[8rem] font-black text-white leading-[0.85] uppercase tracking-tighter">
-              Research <br/>
-              <span className="text-secondary font-serif   normal-case tracking-tight text-7xl lg:text-[10rem]">Mastery</span>
-            </h1>
-            
-            <p className="text-xl lg:text-2xl text-white/50 max-w-2xl mx-auto font-light leading-relaxed">
-              M.Phil and Ph.D programs at NextGen University are designed for scholars seeking to define the future through disciplined inquiry and original research.
-            </p>
-            
-            <div className="flex flex-wrap gap-6 justify-center pt-8">
-              <button className="px-14 py-6 bg-secondary text-primary rounded-full font-black uppercase tracking-widest text-sm hover:bg-white transition-all shadow-2xl">
-                Submit Research Interest
-              </button>
-              <button className="px-14 py-6 border-2 border-white/10 text-white rounded-full font-black uppercase tracking-widest text-sm hover:bg-white hover:text-primary transition-all">
-                Download Graduate Guide
-              </button>
-            </div>
-          </motion.div>
+          <div className="max-w-4xl mx-auto space-y-12">
+            <motion.div
+              initial={{ opacity: 0, y: 30 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 1, ease: [0.16, 1, 0.3, 1] }}
+              className="space-y-8"
+            >
+              <div className="inline-flex items-center gap-3 px-6 py-2 rounded-full bg-white/5 backdrop-blur-md border border-white/20 text-secondary shadow-xl overflow-hidden group">
+                <Sparkles size={14} className="group-hover:rotate-12 transition-transform" />
+                <span className="text-[11px] font-black uppercase tracking-[0.4em]">Expanding Human Knowledge</span>
+              </div>
+              
+              <h1 className="text-5xl lg:text-6xl font-black text-white leading-[1.05] uppercase tracking-tighter">
+                Research <br/>
+                <span className="text-secondary font-serif normal-case tracking-tight italic opacity-90">Mastery</span>
+              </h1>
+              
+              <p className="text-lg lg:text-xl text-white/70 max-w-2xl mx-auto font-medium leading-relaxed">
+                M.Phil and Ph.D programs at NextGen University are designed for scholars seeking to define the future through disciplined inquiry and original research.
+              </p>
+              
+              <div className="flex flex-wrap gap-5 pt-8 justify-center">
+                <button className="px-12 py-5 bg-secondary text-primary rounded-2xl font-black uppercase tracking-[0.15em] text-sm hover:scale-[1.02] transition-all shadow-[0_20px_50px_rgba(255,191,0,0.15)] active:scale-95">
+                  Submit Research Interest
+                </button>
+                <button className="px-12 py-5 border border-white/20 text-white rounded-2xl font-black uppercase tracking-[0.15em] text-sm hover:bg-white hover:text-primary transition-all backdrop-blur-sm active:scale-95">
+                  Download Graduate Guide
+                </button>
+              </div>
+            </motion.div>
+          </div>
         </div>
         
         <motion.div 
-          animate={{ y: [0, 10, 0] }}
-          transition={{ duration: 4, repeat: Infinity }}
-          className="absolute bottom-10 left-1/2 -translate-x-1/2 text-white/20"
+          animate={{ y: [0, 8, 0] }}
+          transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
+          className="absolute bottom-10 left-1/2 -translate-x-1/2 opacity-20"
         >
-           <div className="w-1 h-20 bg-gradient-to-b from-secondary/50 to-transparent rounded-full mx-auto" />
+           <div className="w-[1.5px] h-24 bg-gradient-to-b from-secondary via-secondary to-transparent rounded-full mx-auto" />
         </motion.div>
       </section>
 
