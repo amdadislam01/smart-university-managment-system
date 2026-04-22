@@ -76,7 +76,7 @@ export default function UndergraduatePage() {
                 <span className="text-xs font-black uppercase tracking-[0.2em]">Admission Open 2026</span>
               </div>
               
-              <h1 className="text-6xl lg:text-8xl font-black text-white leading-tight uppercase tracking-tight">
+              <h1 className="text-5xl lg:text-6xl font-black text-white leading-tight uppercase tracking-tight">
                 Begin Your <br/>
                 <span className="text-secondary font-serif">Future</span> Today
               </h1>
@@ -148,7 +148,7 @@ export default function UndergraduatePage() {
               className="space-y-8"
             >
               <div className="space-y-4">
-                <h2 className="text-4xl lg:text-6xl font-black text-primary leading-tight uppercase">
+                <h2 className="text-4xl lg:text-5xl font-black text-primary leading-tight uppercase">
                   Excellence in <br/>
                   <span className="text-secondary font-serif">Every Dimension</span>
                 </h2>
@@ -255,7 +255,7 @@ export default function UndergraduatePage() {
             
             <div className="relative z-10 grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
               <div className="space-y-8">
-                <h2 className="text-5xl lg:text-7xl font-black text-white leading-tight uppercase tracking-tighter">
+                <h2 className="text-5xl lg:text-6xl font-black text-white leading-tight uppercase tracking-tighter">
                   Realize Your <br/>
                   <span className="text-secondary font-serif">Potential</span>
                 </h2>
