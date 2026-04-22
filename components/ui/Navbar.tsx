@@ -78,7 +78,14 @@ const navLinks = [
     name: "Students", 
     href: "#", 
     hasDropdown: true,
-    items: ["Halls of Residence", "Student Login", "Results", "Health Insurance", "Transport", "Club Activities"]
+    items: [
+      { name: "Halls of Residence", href: "/students/halls" },
+      { name: "Student Login", href: "/login/student" },
+      { name: "Results", href: "/students/results" },
+      { name: "Health Insurance", href: "/students/health-insurance" },
+      { name: "Transport", href: "/students/transport" },
+      { name: "Club Activities", href: "/students/clubs" }
+    ]
   },
   { 
     name: "Research", 
@@ -95,7 +102,7 @@ const navLinks = [
 ];
 
 const utilityLinks = [
-  { name: "Student Login", icon: GraduationCap, href: "#" },
+  { name: "Student Login", icon: GraduationCap, href: "/login/student" },
   { name: "Employee Login", icon: User, href: "#" },
   { name: "Online Services", icon: Globe, href: "#" },
   { name: "University Library", icon: Library, href: "#" },
