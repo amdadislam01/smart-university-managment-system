@@ -162,7 +162,7 @@ export default function LibrariesPage() {
             <div className="flex flex-col lg:flex-row items-end justify-between mb-16 gap-6">
                <div className="space-y-4">
                   <div className="h-1.5 w-24 bg-secondary rounded-full" />
-                  <h2 className="text-4xl lg:text-6xl font-black text-primary uppercase leading-none">
+                  <h2 className="text-4xl lg:text-5xl font-black text-primary uppercase leading-none">
                      Library <span className="text-secondary font-serif">Directory</span>
                   </h2>
                </div>
@@ -227,7 +227,7 @@ export default function LibrariesPage() {
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-20 items-center">
                <div className="space-y-8">
                   <div className="space-y-4">
-                     <h2 className="text-4xl lg:text-6xl font-black text-primary uppercase leading-tight tracking-tight">
+                     <h2 className="text-4xl lg:text-5xl font-black text-primary uppercase leading-tight tracking-tight">
                         Working <br /> <span className="text-secondary">Hours</span>
                      </h2>
                      <p className="text-lg text-text-main/60 font-medium leading-relaxed max-w-xl">
