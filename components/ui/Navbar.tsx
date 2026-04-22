@@ -91,21 +91,33 @@ const navLinks = [
     name: "Research", 
     href: "#", 
     hasDropdown: true,
-    items: ["Research Centers", "Publications", "Journals", "Funded Projects", "Innovation Lab"]
+    items: [
+      { name: "Research Centers", href: "/research/research-centers" },
+      { name: "Publications", href: "/research/publications" },
+      { name: "Journals", href: "/research/journals" },
+      { name: "Funded Projects", href: "/research/funded-projects" },
+      { name: "Innovation Lab", href: "/research/innovation-lab" }
+    ]
   },
   { 
     name: "Quick Links", 
     href: "#", 
     hasDropdown: true,
-    items: ["Student Union", "JOBS", "Tenders", "Forms & Downloads", "Notices & News", "Events"]
+    items: [
+      { name: "Student Union", href: "/quick-links/student-union" },
+      { name: "JOBS", href: "/quick-links/jobs" },
+      { name: "Forms & Downloads", href: "/quick-links/downloads" },
+      { name: "Notices & News", href: "/quick-links/news" },
+      { name: "Events", href: "/quick-links/events" }
+    ]
   },
 ];
 
 const utilityLinks = [
   { name: "Student Login", icon: GraduationCap, href: "/login/student" },
-  { name: "Employee Login", icon: User, href: "#" },
-  { name: "Online Services", icon: Globe, href: "#" },
-  { name: "University Library", icon: Library, href: "#" },
+  { name: "Employee Login", icon: User, href: "/login/employee" },
+  { name: "Online Services", icon: Globe, href: "/services/online" },
+  { name: "University Library", icon: Library, href: "/academics/libraries" },
 ];
 
 export function Navbar() {
@@ -157,15 +169,12 @@ export function Navbar() {
             ))}
           </div>
           <div className="flex items-center gap-6">
-             <Link href="#" className="hover:text-secondary transition-colors">Career</Link>
-             <Link href="#" className="hover:text-secondary transition-colors">Tenders</Link>
-             <Link href="#" className="hover:text-secondary transition-colors">Feedback</Link>
+             <Link href="/career" className="hover:text-secondary transition-colors text-[11px] font-bold uppercase tracking-widest">Career</Link>
+             <Link href="/tenders" className="hover:text-secondary transition-colors text-[11px] font-bold uppercase tracking-widest">Tenders</Link>
+             <Link href="/feedback" className="hover:text-secondary transition-colors text-[11px] font-bold uppercase tracking-widest">Feedback</Link>
             <button className="flex items-center gap-1.5 hover:text-secondary transition-colors font-bold border-l border-white/20 pl-4 uppercase tracking-wider">
               <Search size={14} />
               Search
-            </button>
-            <button className="hover:text-secondary transition-colors font-bold">
-              বাংলা
             </button>
           </div>
         </div>
@@ -190,6 +199,7 @@ export function Navbar() {
                 fill 
                 className="object-contain"
                 priority
+                sizes="(max-width: 768px) 48px, 64px"
               />
             </div>
             <div className="flex flex-col">
