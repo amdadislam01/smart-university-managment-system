@@ -65,7 +65,14 @@ const navLinks = [
     name: "Admission", 
     href: "#", 
     hasDropdown: true,
-    items: ["Undergraduate", "Graduate", "M.Phil/Ph.D", "International Students", "Scholarships", "Rules & Guidelines"]
+    items: [
+      { name: "Undergraduate", href: "/admission/undergraduate" },
+      { name: "Graduate", href: "/admission/graduate" },
+      { name: "M.Phil/Ph.D", href: "/admission/mphil-phd" },
+      { name: "International Students", href: "/admission/international" },
+      { name: "Scholarships", href: "/admission/scholarships" },
+      { name: "Rules & Guidelines", href: "/admission/rules" }
+    ]
   },
   { 
     name: "Students", 
