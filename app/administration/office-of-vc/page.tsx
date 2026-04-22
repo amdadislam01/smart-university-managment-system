@@ -170,7 +170,7 @@ export default function OfficeOfVCPage() {
                
                <div className="space-y-10 relative z-10 text-center lg:text-left">
                   <div className="space-y-4">
-                     <h2 className="text-4xl lg:text-6xl font-black text-primary uppercase leading-tight tracking-tight">
+                     <h2 className="text-4xl lg:text-5xl font-black text-primary uppercase leading-tight tracking-tight">
                         Vice Chancellor's <br /> <span className="text-secondary">Message</span>
                      </h2>
                      <div className="h-2 w-24 bg-secondary rounded-full" />
@@ -204,7 +204,7 @@ export default function OfficeOfVCPage() {
             <div className="flex flex-col lg:flex-row items-end justify-between mb-16 gap-6">
                <div className="space-y-4">
                   <div className="h-1.5 w-24 bg-secondary rounded-full" />
-                  <h2 className="text-4xl lg:text-6xl font-black text-primary uppercase leading-none">
+                  <h2 className="text-4xl lg:text-5xl font-black text-primary uppercase leading-none">
                      Office <span className="text-secondary font-serif">Staff</span>
                   </h2>
                </div>
