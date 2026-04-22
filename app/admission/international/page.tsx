@@ -182,7 +182,7 @@ export default function InternationalStudentsPage() {
               
               <div className="relative z-10 grid grid-cols-1 lg:grid-cols-2 p-12 lg:p-24 items-center gap-20">
                  <div className="space-y-10">
-                    <h2 className="text-5xl lg:text-7xl font-black text-white uppercase leading-[0.9] tracking-tighter">A Home Away <br/><span className="text-secondary font-serif normal-case">From Home</span></h2>
+                    <h2 className="text-5xl lg:text-6xl font-black text-white uppercase leading-[0.9] tracking-tighter">A Home Away <br/><span className="text-secondary font-serif normal-case">From Home</span></h2>
                     <p className="text-xl text-white/60 leading-relaxed font-light max-w-xl">
                       Experience a campus where every culture is celebrated. With over 20 international student clubs and weekly cultural festivals, you'll never feel alone.
                     </p>
