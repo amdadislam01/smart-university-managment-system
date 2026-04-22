@@ -250,7 +250,7 @@ export default function AffiliatedCollegesPage() {
                               </div>
 
                               <div className="space-y-4 flex-1">
-                                 <p className="text-sm font-medium text-text-main/60 leading-relaxed italic">
+                                 <p className="text-sm font-medium text-text-main/60 leading-relaxed  ">
                                     &ldquo;{college.specialization}&rdquo;
                                  </p>
                                  <div className="pt-4 grid grid-cols-2 gap-4 border-t border-primary/5">
