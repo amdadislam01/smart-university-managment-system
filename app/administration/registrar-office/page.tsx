@@ -109,7 +109,7 @@ export default function RegistrarOfficePage() {
                     className="space-y-6"
                   >
                      <div className="inline-block px-4 py-1.5 bg-primary text-secondary rounded-full font-black text-[10px] uppercase tracking-widest">Office Head</div>
-                     <h2 className="text-4xl lg:text-6xl font-black text-primary uppercase leading-tight tracking-tight">
+                     <h2 className="text-4xl lg:text-5xl font-black text-primary uppercase leading-tight tracking-tight">
                         Custodian of <br /> <span className="text-secondary">Academic Integrity</span>
                      </h2>
                      <p className="text-text-main/60 font-medium leading-relaxed text-lg lg:pr-12">
@@ -203,7 +203,7 @@ export default function RegistrarOfficePage() {
                 <div className="flex flex-col lg:flex-row items-end justify-between mb-16 gap-6">
                    <div className="space-y-4">
                       <div className="h-1.5 w-24 bg-secondary rounded-full" />
-                      <h2 className="text-4xl lg:text-6xl font-black text-primary uppercase leading-none">
+                      <h2 className="text-4xl lg:text-5xl font-black text-primary uppercase leading-none">
                          Forms & <span className="text-secondary font-serif">Downloads</span>
                       </h2>
                    </div>
