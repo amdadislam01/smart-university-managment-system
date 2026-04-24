@@ -161,7 +161,7 @@ export function Navbar() {
               <Link 
                 key={link.name} 
                 href={link.href} 
-                className="flex items-center gap-1.5 hover:text-secondary transition-colors"
+                className="flex items-center gap-1.5 hover:text-secondary transition-colors cursor-pointer"
               >
                 <link.icon size={14} />
                 {link.name}
@@ -172,7 +172,7 @@ export function Navbar() {
              <Link href="/career" className="hover:text-secondary transition-colors text-[11px] font-bold uppercase tracking-widest">Career</Link>
              <Link href="/tenders" className="hover:text-secondary transition-colors text-[11px] font-bold uppercase tracking-widest">Tenders</Link>
              <Link href="/feedback" className="hover:text-secondary transition-colors text-[11px] font-bold uppercase tracking-widest">Feedback</Link>
-            <button className="flex items-center gap-1.5 hover:text-secondary transition-colors font-bold border-l border-white/20 pl-4 uppercase tracking-wider">
+            <button className="flex items-center gap-1.5 hover:text-secondary transition-colors font-bold border-l border-white/20 pl-4 uppercase tracking-wider cursor-pointer">
               <Search size={14} />
               Search
             </button>
@@ -191,7 +191,7 @@ export function Navbar() {
       >
         <div className="container mx-auto px-4 flex justify-between items-center">
           {/* Logo Section */}
-          <Link href="/" className="relative flex items-center gap-3 shrink-0">
+          <Link href="/" className="relative flex items-center gap-3 shrink-0 cursor-pointer">
             <div className="relative w-12 h-12 lg:w-16 lg:h-16 transition-all duration-300">
               <Image 
                 src="/logo.png" 
@@ -220,7 +220,7 @@ export function Navbar() {
                 <Link 
                   href={link.href}
                   className={cn(
-                    "px-3 xl:px-4 py-3 flex items-center gap-1 font-bold text-[13px] xl:text-[14px] transition-all relative group",
+                    "px-3 xl:px-4 py-3 flex items-center gap-1 font-bold text-[13px] xl:text-[14px] transition-all relative group cursor-pointer",
                     isLinkActive(link) ? "text-secondary" : "text-primary hover:text-secondary"
                   )}
                 >
@@ -284,14 +284,14 @@ export function Navbar() {
           {/* Action Button & Toggle */}
           <div className="flex items-center gap-4">
              <Link 
-              href="#" 
+              href="/admission/apply" 
               className="hidden sm:block bg-secondary text-primary px-5 py-2.5 rounded-md text-[13px] font-extrabold shadow-md hover:shadow-gold/20 hover:shadow-xl hover:-translate-y-0.5 transition-all duration-300 uppercase tracking-wider"
             >
               Apply Online
             </Link>
             
             <button 
-              className="lg:hidden text-primary p-2 transition-transform active:scale-90"
+              className="lg:hidden text-primary p-2 transition-transform active:scale-90 cursor-pointer"
               onClick={() => setIsMobileMenuOpen(true)}
             >
               <Menu size={32} />
@@ -324,7 +324,7 @@ export function Navbar() {
                   <span className="text-primary font-bold text-lg">NextGen</span>
                 </Link>
                 <button 
-                  className="text-primary p-2 bg-white rounded-full shadow-md hover:rotate-90 transition-all duration-300"
+                  className="text-primary p-2 bg-white rounded-full shadow-md hover:rotate-90 transition-all duration-300 cursor-pointer"
                   onClick={() => setIsMobileMenuOpen(false)}
                 >
                   <X size={24} />
@@ -351,7 +351,7 @@ export function Navbar() {
                                 key={itemName} 
                                 href={itemHref} 
                                 className={cn(
-                                  "p-3 rounded-lg text-sm font-semibold border-l-4 transition-all",
+                                  "p-3 rounded-lg text-sm font-semibold border-l-4 transition-all cursor-pointer",
                                   pathname === itemHref 
                                     ? "bg-secondary/10 text-primary border-secondary" 
                                     : "bg-surface text-text-main border-transparent hover:border-secondary hover:bg-secondary/5"
@@ -382,8 +382,8 @@ export function Navbar() {
 
               <div className="p-6 bg-surface/30">
                 <Link 
-                  href="#" 
-                  className="block w-full bg-primary text-secondary text-center py-4 rounded-xl font-extrabold text-lg shadow-xl active:scale-95 transition-transform"
+                  href="/admission/apply" 
+                  className="block w-full bg-primary text-secondary text-center py-4 rounded-xl font-extrabold text-lg shadow-xl active:scale-95 transition-transform cursor-pointer"
                 >
                   Apply Online
                 </Link>
