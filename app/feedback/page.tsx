@@ -84,7 +84,7 @@ export default function FeedbackPage() {
           <div className="max-w-4xl mx-auto">
              
              {/* Category Picker - Minimal Row */}
-             <div className="flex flex-wrap justify-center gap-3 mb-12">
+             <div className="flex flex-wrap justify-center gap-3 mb-12 mt-12">
                 {feedbackCategories.map((cat) => (
                    <button
                       key={cat.id}
