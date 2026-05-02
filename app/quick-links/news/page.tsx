@@ -113,7 +113,7 @@ export default function NewsPage() {
             className="text-5xl lg:text-7xl font-black text-white leading-[0.9] uppercase tracking-tighter"
           >
              Notices & <br />
-             <span className="text-secondary text-serif italic">News</span>
+             <span className="text-secondary text-serif  ">News</span>
           </motion.h1>
         </div>
       </section>
