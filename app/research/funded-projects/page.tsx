@@ -317,7 +317,7 @@ export default function FundedProjectsPage() {
                   <div className="relative bg-white rounded-[4rem] p-12 lg:p-20 shadow-2xl border border-gray-100 text-center space-y-12">
                      <div className="space-y-4">
                         <h3 className="text-3xl font-black text-primary uppercase tracking-tight">Ready to <span className="text-secondary">Innovate?</span></h3>
-                        <p className="text-text-main/60 font-medium italic">"Research is what I'm doing when I don't know what I'm doing." — Wernher von Braun</p>
+                        <p className="text-text-main/60 font-medium  ">"Research is what I'm doing when I don't know what I'm doing." — Wernher von Braun</p>
                      </div>
                      
                      <div className="space-y-6">
