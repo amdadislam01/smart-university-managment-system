@@ -208,7 +208,7 @@ export default function EventsPage() {
          <div className="container mx-auto px-4 max-w-6xl">
             <div className="flex flex-col lg:flex-row items-end justify-between mb-16 gap-8 px-4">
                <div className="space-y-4">
-                  <h2 className="text-4xl lg:text-5xl font-black text-primary uppercase tracking-tighter">Event <span className="text-secondary italic">Explorer</span></h2>
+                  <h2 className="text-4xl lg:text-5xl font-black text-primary uppercase tracking-tighter">Event <span className="text-secondary  ">Explorer</span></h2>
                   <div className="flex flex-wrap gap-2">
                      {categories.map((cat) => (
                         <button 
