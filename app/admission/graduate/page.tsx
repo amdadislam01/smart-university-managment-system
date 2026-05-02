@@ -44,7 +44,7 @@ const GraduatePage = () => {
               
               <h1 className="text-5xl lg:text-6xl font-black text-white leading-[1.05] uppercase tracking-tighter">
                 Lead the <br/>
-                <span className="text-secondary font-serif normal-case tracking-tight italic opacity-90">Frontier</span>
+                <span className="text-secondary font-serif normal-case tracking-tight   opacity-90">Frontier</span>
               </h1>
               
               <p className="text-lg lg:text-xl text-white/70 max-w-2xl mx-auto font-medium leading-relaxed">
