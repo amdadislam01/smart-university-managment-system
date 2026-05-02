@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Raleway } from "next/font/google";
 import "./globals.css";
+import ClientLayoutWrapper from "@/components/layout/ClientLayoutWrapper";
 
 const raleway = Raleway({
   variable: "--font-raleway",
@@ -13,9 +14,6 @@ export const metadata: Metadata = {
   description: "Smart University Management System",
 };
 
-import { Navbar } from "@/components/ui/Navbar";
-import Footer from "@/components/ui/Footer";
-
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -25,13 +23,13 @@ export default function RootLayout({
     <html
       lang="en"
       className={`${raleway.variable} h-full antialiased scroll-smooth`}
+      suppressHydrationWarning
     >
-      <body className={`${raleway.className} min-h-full flex flex-col bg-bg-base text-text-main selection:bg-secondary/30`}>
-        <Navbar />
-        <div className="pt-[110px] flex-1">
-          {children}
-        </div>
-        <Footer />
+      <body 
+        className={`${raleway.className} min-h-full bg-bg-base text-text-main selection:bg-secondary/30`}
+        suppressHydrationWarning
+      >
+        <ClientLayoutWrapper>{children}</ClientLayoutWrapper>
       </body>
     </html>
   );
