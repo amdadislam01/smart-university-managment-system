@@ -3,6 +3,7 @@
 import React, { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { 
   Lock, 
@@ -21,7 +22,10 @@ import {
 import { cn } from "@/lib/utils";
 
 export default function EmployeeLoginPage() {
+  const router = useRouter();
+  const [isAdminLogin, setIsAdminLogin] = useState(false);
   const [employeeId, setEmployeeId] = useState("");
+  const [adminEmail, setAdminEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -34,12 +38,24 @@ export default function EmployeeLoginPage() {
     
     // Simulate login delay
     setTimeout(() => {
-      if (!employeeId) {
-        setError("Please enter your Employee ID");
-        setIsLoading(false);
+      if (isAdminLogin) {
+        if (adminEmail === "admin@nub.edu.bd" && password === "admin123") {
+          // Set cookie for session
+          document.cookie = "admin_session=true; path=/; max-age=3600"; // 1 hour session
+          router.push("/admin/dashboard");
+        } else {
+          setError("Invalid Admin Credentials");
+          setIsLoading(false);
+        }
       } else {
-        console.log("Logging in...", { employeeId, password });
-        setIsLoading(false);
+        if (!employeeId) {
+          setError("Please enter your Employee ID");
+          setIsLoading(false);
+        } else {
+          // Placeholder for employee login
+          setError("Employee login is currently disabled. Use Admin Login.");
+          setIsLoading(false);
+        }
       }
     }, 1500);
   };
@@ -135,9 +151,21 @@ export default function EmployeeLoginPage() {
                  <h1 className="text-2xl font-black text-primary uppercase tracking-tighter">Staff <span className="text-secondary font-serif">Console</span></h1>
               </div>
 
-              <div className="mb-10 text-center lg:text-left">
-                <h3 className="text-3xl font-black text-primary uppercase tracking-tight mb-2">Employee <span className="text-secondary italic">Login</span></h3>
-                <p className="text-primary/40 text-sm font-medium">Authorised Personnel Only</p>
+              <div className="mb-10 text-center lg:text-left flex items-center justify-between">
+                <div>
+                  <h3 className="text-3xl font-black text-primary uppercase tracking-tight mb-2">
+                    {isAdminLogin ? "Admin" : "Employee"} <span className="text-secondary">Login</span>
+                  </h3>
+                  <p className="text-primary/40 text-sm font-medium">Authorised Personnel Only</p>
+                </div>
+                {isAdminLogin && (
+                  <button 
+                    onClick={() => setIsAdminLogin(false)}
+                    className="text-[10px] font-black text-primary/30 uppercase tracking-widest hover:text-secondary transition-colors"
+                  >
+                    Back to Employee
+                  </button>
+                )}
               </div>
 
               <form onSubmit={handleSubmit} className="space-y-6">
@@ -158,14 +186,15 @@ export default function EmployeeLoginPage() {
                 <div className="space-y-4">
                   <div className="relative">
                     <div className="absolute inset-y-0 left-0 pl-6 flex items-center pointer-events-none">
-                      <User className="text-primary/20" size={20} />
+                      {isAdminLogin ? <Mail className="text-primary/20" size={20} /> : <User className="text-primary/20" size={20} />}
                     </div>
                     <input
-                      type="text"
+                      type={isAdminLogin ? "email" : "text"}
                       className="w-full bg-surface border border-transparent text-primary pl-14 pr-6 py-5 rounded-2xl focus:outline-none focus:ring-4 focus:ring-secondary/10 focus:bg-white focus:border-secondary/30 transition-all font-bold placeholder:text-primary/20 text-lg"
-                      placeholder="Employee ID"
-                      value={employeeId}
-                      onChange={(e) => setEmployeeId(e.target.value)}
+                      placeholder={isAdminLogin ? "Admin Email" : "Employee ID"}
+                      value={isAdminLogin ? adminEmail : employeeId}
+                      onChange={(e) => isAdminLogin ? setAdminEmail(e.target.value) : setEmployeeId(e.target.value)}
+                      required
                     />
                   </div>
 
@@ -179,6 +208,7 @@ export default function EmployeeLoginPage() {
                       placeholder="Password"
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
+                      required
                     />
                     <button
                       type="button"
@@ -232,16 +262,25 @@ export default function EmployeeLoginPage() {
                 </div>
                 
                 <div className="flex flex-col gap-3">
-                  <button className="w-full flex items-center justify-between bg-surface border border-transparent text-primary rounded-2xl p-5 hover:border-secondary transition-all group px-8">
+                  <button className="w-full flex items-center justify-between bg-surface border border-transparent text-primary rounded-2xl p-5 hover:border-secondary transition-all group px-8 cursor-pointer">
                      <div className="flex items-center gap-4">
                         <Building2 size={20} className="text-secondary" />
                         <span className="font-bold text-xs uppercase tracking-widest">Faculty Webmail</span>
                      </div>
                      <ArrowRight size={16} className="text-primary/20 group-hover:translate-x-1 transition-all" />
                   </button>
-                  <button className="w-full flex items-center justify-between bg-surface border border-transparent text-primary rounded-2xl p-5 hover:border-secondary transition-all group px-8">
+                  <button 
+                    onClick={() => {
+                      setIsAdminLogin(true);
+                      setError("");
+                    }}
+                    className={cn(
+                      "w-full flex items-center justify-between bg-surface border border-transparent text-primary rounded-2xl p-5 hover:border-secondary transition-all group px-8 cursor-pointer",
+                      isAdminLogin && "border-secondary bg-white ring-2 ring-secondary/10"
+                    )}
+                  >
                      <div className="flex items-center gap-4">
-                        <Mail size={20} className="text-secondary" />
+                        <Mail size={20} className={cn("transition-colors", isAdminLogin ? "text-primary" : "text-secondary")} />
                         <span className="font-bold text-xs uppercase tracking-widest">Admin Dashboard</span>
                      </div>
                      <ArrowRight size={16} className="text-primary/20 group-hover:translate-x-1 transition-all" />
@@ -259,3 +298,4 @@ export default function EmployeeLoginPage() {
     </main>
   );
 }
+
