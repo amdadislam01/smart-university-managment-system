@@ -230,7 +230,7 @@ export default function PublicationsPage() {
                               </div>
                            </div>
 
-                           <p className="text-[10px] font-black text-primary/20 uppercase tracking-widest italic truncate">
+                           <p className="text-[10px] font-black text-primary/20 uppercase tracking-widest   truncate">
                               DOI: {pub.doi}
                            </p>
 
@@ -292,7 +292,7 @@ export default function PublicationsPage() {
                                  {pub.title}
                               </h4>
                               <p className="text-sm font-bold text-text-main/40 line-clamp-1">
-                                 {pub.authors} — <span className="text-primary/20 italic">{pub.journal}</span>
+                                 {pub.authors} — <span className="text-primary/20  ">{pub.journal}</span>
                               </p>
                            </div>
                         </div>
