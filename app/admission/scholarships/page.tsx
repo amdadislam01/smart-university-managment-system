@@ -86,7 +86,7 @@ export default function ScholarshipsPage() {
               
               <h1 className="text-5xl lg:text-6xl font-black text-white leading-[1.05] uppercase tracking-tighter">
                 Unlock Your <br/>
-                <span className="text-secondary font-serif normal-case tracking-tight italic opacity-90">Full Potential</span>
+                <span className="text-secondary font-serif normal-case tracking-tight   opacity-90">Full Potential</span>
               </h1>
               
               <p className="text-lg lg:text-xl text-white/70 max-w-2xl mx-auto font-medium leading-relaxed">
