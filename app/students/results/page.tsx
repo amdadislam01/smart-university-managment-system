@@ -269,7 +269,7 @@ export default function ResultsPage() {
                          <div className="w-10 h-10 rounded-full bg-secondary/10 flex items-center justify-center text-secondary flex-shrink-0">
                             <AlertCircle size={20} />
                          </div>
-                         <p className="text-[11px] font-bold text-primary/60 leading-relaxed italic">
+                         <p className="text-[11px] font-bold text-primary/60 leading-relaxed  ">
                            This is an unofficial digital summary. Please visit the Registrar's Office for official transcripts.
                          </p>
                       </div>
