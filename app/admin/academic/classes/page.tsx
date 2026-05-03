@@ -34,18 +34,26 @@ export default function ClassManagement() {
     code: "",
     teacherId: ""
   });
+  const [modalMode, setModalMode] = useState<"add" | "edit" | "view" | "delete">("add");
+  const [selectedClass, setSelectedClass] = useState<any>(null);
 
   const fetchData = async (search = "") => {
     setLoading(true);
     try {
-      const [classRes, teacherRes] = await Promise.all([
+      const results = await Promise.allSettled([
         fetch(`/api/admin/classes${search ? `?search=${search}` : ""}`),
         fetch("/api/admin/teachers")
       ]);
-      const classData = await classRes.json();
-      const teacherData = await teacherRes.json();
-      setClassesList(classData);
-      setTeachers(teacherData);
+      
+      if (results[0].status === 'fulfilled' && results[0].value.ok) {
+        const classData = await results[0].value.json();
+        setClassesList(Array.isArray(classData) ? classData : []);
+      }
+
+      if (results[1].status === 'fulfilled' && results[1].value.ok) {
+        const teacherData = await results[1].value.json();
+        setTeachers(Array.isArray(teacherData) ? teacherData : []);
+      }
     } catch (error) {
       console.error("Error fetching data:", error);
     } finally {
@@ -62,22 +70,71 @@ export default function ClassManagement() {
     fetchData(searchTerm);
   };
 
-  const handleAddClass = async (e: React.FormEvent) => {
+  const resetForm = () => {
+    setFormData({ name: "", code: "", teacherId: "" });
+    setSelectedClass(null);
+  };
+
+  const openModal = (mode: "add" | "edit" | "view" | "delete", classItem: any = null) => {
+    setModalMode(mode);
+    setSelectedClass(classItem);
+    if (classItem && mode !== "add") {
+      setFormData({
+        name: classItem.name,
+        code: classItem.code,
+        teacherId: classItem.teacherId?._id || classItem.teacherId || ""
+      });
+    } else {
+      resetForm();
+    }
+    setIsModalOpen(true);
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
     try {
-      const res = await fetch("/api/admin/classes", {
-        method: "POST",
+      const url = modalMode === "edit" ? `/api/admin/classes/${selectedClass._id}` : "/api/admin/classes";
+      const method = modalMode === "edit" ? "PUT" : "POST";
+      
+      const res = await fetch(url, {
+        method,
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(formData),
       });
       if (res.ok) {
         setIsModalOpen(false);
-        setFormData({ name: "", code: "", teacherId: "" });
+        resetForm();
         fetchData();
+      } else {
+        const data = await res.json();
+        alert(data.error || `Failed to ${modalMode} class`);
       }
     } catch (error) {
-      console.error("Error adding class:", error);
+      console.error(`Error ${modalMode}ing class:`, error);
+      alert("An error occurred");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleDelete = async () => {
+    if (!selectedClass) return;
+    setIsSubmitting(true);
+    try {
+      const res = await fetch(`/api/admin/classes/${selectedClass._id}`, {
+        method: "DELETE",
+      });
+      if (res.ok) {
+        setIsModalOpen(false);
+        fetchData();
+      } else {
+        const data = await res.json();
+        alert(data.error || "Failed to delete class");
+      }
+    } catch (error) {
+      console.error("Error deleting class:", error);
+      alert("An error occurred");
     } finally {
       setIsSubmitting(false);
     }
@@ -104,7 +161,7 @@ export default function ClassManagement() {
             Class Schedule
           </button>
           <button 
-            onClick={() => setIsModalOpen(true)}
+            onClick={() => openModal("add")}
             className="flex items-center gap-2 px-6 py-2.5 bg-primary text-white rounded-xl text-sm font-bold hover:bg-primary/90 transition-all shadow-lg shadow-primary/20 cursor-pointer"
           >
             <Plus size={18} />
@@ -219,9 +276,27 @@ export default function ClassManagement() {
                     </td>
                     <td className="px-6 py-4">
                       <div className="flex items-center justify-center gap-2">
-                        <button className="p-2 text-slate-400 hover:text-primary transition-all cursor-pointer" title="View Details"><Eye size={18} /></button>
-                        <button className="p-2 text-slate-400 hover:text-amber-600 transition-all cursor-pointer" title="Edit Class"><Edit3 size={18} /></button>
-                        <button className="p-2 text-slate-400 hover:text-red-600 transition-all cursor-pointer" title="Delete Class"><Trash2 size={18} /></button>
+                        <button 
+                          onClick={() => openModal("view", cls)}
+                          className="p-2 text-slate-400 hover:text-primary transition-all cursor-pointer" 
+                          title="View Details"
+                        >
+                          <Eye size={18} />
+                        </button>
+                        <button 
+                          onClick={() => openModal("edit", cls)}
+                          className="p-2 text-slate-400 hover:text-amber-600 transition-all cursor-pointer" 
+                          title="Edit Class"
+                        >
+                          <Edit3 size={18} />
+                        </button>
+                        <button 
+                          onClick={() => openModal("delete", cls)}
+                          className="p-2 text-slate-400 hover:text-red-600 transition-all cursor-pointer" 
+                          title="Delete Class"
+                        >
+                          <Trash2 size={18} />
+                        </button>
                       </div>
                     </td>
                   </motion.tr>
@@ -266,64 +341,128 @@ export default function ClassManagement() {
               <div className="p-8">
                 <div className="flex items-center justify-between mb-8">
                   <div>
-                    <h2 className="text-2xl font-black text-slate-800 uppercase tracking-tight">Add New <span className="text-primary">Class</span></h2>
-                    <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mt-1">Institutional Academic Structure</p>
+                    <h2 className="text-2xl font-black text-slate-800 uppercase tracking-tight">
+                      {modalMode === "add" && <>Add New <span className="text-primary">Class</span></>}
+                      {modalMode === "edit" && <>Edit <span className="text-primary">Class</span></>}
+                      {modalMode === "view" && <><span className="text-primary">Class</span> Details</>}
+                      {modalMode === "delete" && <>Delete <span className="text-primary">Class</span></>}
+                    </h2>
+                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mt-2">
+                      {modalMode === "delete" ? "This action cannot be undone" : "Institutional Academic Structure"}
+                    </p>
                   </div>
                   <button onClick={() => setIsModalOpen(false)} className="p-2 hover:bg-slate-100 rounded-full transition-colors">
                     <X size={20} className="text-slate-400" />
                   </button>
                 </div>
 
-                <form onSubmit={handleAddClass} className="space-y-6">
-                  <div className="space-y-4">
-                    <div>
-                      <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-2 block">Class Name</label>
-                      <input 
-                        type="text" 
-                        required
-                        placeholder="e.g. Computer Science & Engineering"
-                        value={formData.name}
-                        onChange={(e) => setFormData({...formData, name: e.target.value})}
-                        className="w-full px-5 py-4 bg-slate-50 border border-slate-100 rounded-2xl text-sm font-bold focus:ring-4 focus:ring-primary/10 focus:bg-white outline-none transition-all"
-                      />
+                {modalMode === "delete" ? (
+                  <div className="space-y-6">
+                    <div className="p-6 bg-red-50 border border-red-100 rounded-[2rem] flex items-start gap-4">
+                      <div className="p-3 bg-red-100 text-red-600 rounded-2xl">
+                        <Trash2 size={24} />
+                      </div>
+                      <div>
+                        <p className="text-sm font-bold text-red-900">Delete Confirmation</p>
+                        <p className="text-xs text-red-700 mt-1 leading-relaxed font-medium">
+                          You are about to delete <span className="font-bold underline">{selectedClass?.name}</span>. 
+                          This will remove the department record from the system.
+                        </p>
+                      </div>
                     </div>
-                    <div>
-                      <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-2 block">Class Code</label>
-                      <input 
-                        type="text" 
-                        required
-                        placeholder="e.g. CSE-101"
-                        value={formData.code}
-                        onChange={(e) => setFormData({...formData, code: e.target.value})}
-                        className="w-full px-5 py-4 bg-slate-50 border border-slate-100 rounded-2xl text-sm font-bold focus:ring-4 focus:ring-primary/10 focus:bg-white outline-none transition-all"
-                      />
-                    </div>
-                    <div>
-                      <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-2 block">Head of Department</label>
-                      <select 
-                        required
-                        value={formData.teacherId}
-                        onChange={(e) => setFormData({...formData, teacherId: e.target.value})}
-                        className="w-full px-5 py-4 bg-slate-50 border border-slate-100 rounded-2xl text-sm font-bold focus:ring-4 focus:ring-primary/10 focus:bg-white outline-none transition-all appearance-none cursor-pointer"
-                      >
-                        <option value="">Select a Teacher</option>
-                        {teachers.map(t => (
-                          <option key={t._id} value={t._id}>{t.name} ({t.department})</option>
-                        ))}
-                      </select>
-                    </div>
-                  </div>
 
-                  <div className="pt-4">
-                    <button 
-                      type="submit" 
-                      disabled={isSubmitting}
-                      className="w-full py-4 bg-primary text-white rounded-2xl font-black uppercase tracking-widest text-sm shadow-xl shadow-primary/20 hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center justify-center gap-2"
-                    >
-                      {isSubmitting ? <Loader2 size={18} className="animate-spin" /> : <><Plus size={18} /> Create Class</>}
-                    </button>
+                    <div className="flex gap-3">
+                      <button 
+                        onClick={() => setIsModalOpen(false)}
+                        className="flex-1 py-4 border border-slate-200 text-slate-600 rounded-2xl text-xs font-black uppercase tracking-widest hover:bg-slate-50 transition-all cursor-pointer"
+                      >
+                        Cancel
+                      </button>
+                      <button 
+                        onClick={handleDelete}
+                        disabled={isSubmitting}
+                        className="flex-1 py-4 bg-red-600 text-white rounded-2xl text-xs font-black uppercase tracking-widest hover:bg-red-700 transition-all shadow-xl shadow-red-200 disabled:opacity-50 flex items-center justify-center gap-2 cursor-pointer"
+                      >
+                        {isSubmitting ? <Loader2 size={18} className="animate-spin" /> : "Delete Now"}
+                      </button>
+                    </div>
                   </div>
-                </form>
+                ) : (
+                  <form onSubmit={handleSubmit} className="space-y-6">
+                    <div className="space-y-4">
+                      <div>
+                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-2 block">Class Name</label>
+                        <input 
+                          type="text" 
+                          required
+                          disabled={modalMode === "view"}
+                          placeholder="e.g. Computer Science & Engineering"
+                          value={formData.name}
+                          onChange={(e) => setFormData({...formData, name: e.target.value})}
+                          className="w-full px-5 py-4 bg-slate-50 border border-slate-100 rounded-2xl text-sm font-bold focus:ring-4 focus:ring-primary/10 focus:bg-white outline-none transition-all disabled:opacity-60"
+                        />
+                      </div>
+                      <div>
+                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-2 block">Class Code</label>
+                        <input 
+                          type="text" 
+                          required
+                          disabled={modalMode === "view"}
+                          placeholder="e.g. CSE-101"
+                          value={formData.code}
+                          onChange={(e) => setFormData({...formData, code: e.target.value})}
+                          className="w-full px-5 py-4 bg-slate-50 border border-slate-100 rounded-2xl text-sm font-bold focus:ring-4 focus:ring-primary/10 focus:bg-white outline-none transition-all disabled:opacity-60"
+                        />
+                      </div>
+                      <div>
+                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-2 block">Head of Department</label>
+                        <select 
+                          required
+                          disabled={modalMode === "view"}
+                          value={formData.teacherId}
+                          onChange={(e) => setFormData({...formData, teacherId: e.target.value})}
+                          className="w-full px-5 py-4 bg-slate-50 border border-slate-100 rounded-2xl text-sm font-bold focus:ring-4 focus:ring-primary/10 focus:bg-white outline-none transition-all cursor-pointer disabled:opacity-60"
+                        >
+                          <option value="">Select a Teacher</option>
+                          {teachers.length > 0 ? (
+                            teachers.map(t => (
+                              <option key={t._id} value={t._id}>{t.name} ({t.department})</option>
+                            ))
+                          ) : (
+                            <option disabled>{loading ? "Loading teachers..." : "No teachers available"}</option>
+                          )}
+                        </select>
+                      </div>
+                    </div>
+
+                    <div className="pt-4">
+                      {modalMode === "view" ? (
+                        <button 
+                          type="button"
+                          onClick={() => setIsModalOpen(false)}
+                          className="w-full py-4 border border-slate-200 text-slate-600 rounded-2xl font-black uppercase tracking-widest text-sm hover:bg-slate-50 transition-all cursor-pointer"
+                        >
+                          Close Details
+                        </button>
+                      ) : (
+                        <button 
+                          type="submit" 
+                          disabled={isSubmitting}
+                          className="w-full py-4 bg-primary text-white rounded-2xl font-black uppercase tracking-widest text-sm shadow-xl shadow-primary/20 hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center justify-center gap-2 cursor-pointer"
+                        >
+                          {isSubmitting ? (
+                            <Loader2 size={18} className="animate-spin" />
+                          ) : (
+                            <>
+                              <Plus size={18} /> 
+                              {modalMode === "edit" ? "Update Class" : "Create Class"}
+                            </>
+                          )}
+                        </button>
+                      )}
+                    </div>
+                  </form>
+                )}
               </div>
             </motion.div>
           </div>
