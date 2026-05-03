@@ -40,6 +40,8 @@ export default function SectionManagement() {
     room: "",
     capacity: 50
   });
+  const [modalMode, setModalMode] = useState<"add" | "edit" | "view" | "delete">("add");
+  const [selectedSection, setSelectedSection] = useState<any>(null);
 
   const fetchData = async (search = "") => {
     setLoading(true);
@@ -71,22 +73,74 @@ export default function SectionManagement() {
     fetchData(searchTerm);
   };
 
-  const handleAddSection = async (e: React.FormEvent) => {
+  const resetForm = () => {
+    setFormData({ name: "", sectionId: "", classId: "", teacherId: "", room: "", capacity: 50 });
+    setSelectedSection(null);
+  };
+
+  const openModal = (mode: "add" | "edit" | "view" | "delete", section: any = null) => {
+    setModalMode(mode);
+    setSelectedSection(section);
+    if (section && mode !== "add") {
+      setFormData({
+        name: section.name,
+        sectionId: section.sectionId,
+        classId: section.classId?._id || section.classId || "",
+        teacherId: section.teacherId?._id || section.teacherId || "",
+        room: section.room || "",
+        capacity: section.capacity || 50
+      });
+    } else {
+      resetForm();
+    }
+    setIsModalOpen(true);
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
     try {
-      const res = await fetch("/api/admin/sections", {
-        method: "POST",
+      const url = modalMode === "edit" ? `/api/admin/sections/${selectedSection._id}` : "/api/admin/sections";
+      const method = modalMode === "edit" ? "PUT" : "POST";
+      
+      const res = await fetch(url, {
+        method,
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(formData),
       });
       if (res.ok) {
         setIsModalOpen(false);
-        setFormData({ name: "", sectionId: "", classId: "", teacherId: "", room: "", capacity: 50 });
+        resetForm();
         fetchData();
+      } else {
+        const data = await res.json();
+        alert(data.error || `Failed to ${modalMode} section`);
       }
     } catch (error) {
-      console.error("Error adding section:", error);
+      console.error(`Error ${modalMode}ing section:`, error);
+      alert("An error occurred");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleDelete = async () => {
+    if (!selectedSection) return;
+    setIsSubmitting(true);
+    try {
+      const res = await fetch(`/api/admin/sections/${selectedSection._id}`, {
+        method: "DELETE",
+      });
+      if (res.ok) {
+        setIsModalOpen(false);
+        fetchData();
+      } else {
+        const data = await res.json();
+        alert(data.error || "Failed to delete section");
+      }
+    } catch (error) {
+      console.error("Error deleting section:", error);
+      alert("An error occurred");
     } finally {
       setIsSubmitting(false);
     }
@@ -113,7 +167,7 @@ export default function SectionManagement() {
             <button className="p-1.5 text-slate-400 hover:text-slate-600 transition-all"><List size={18} /></button>
           </div>
           <button 
-            onClick={() => setIsModalOpen(true)}
+            onClick={() => openModal("add")}
             className="flex items-center gap-2 px-6 py-2.5 bg-primary text-white rounded-xl text-sm font-bold hover:bg-primary/90 transition-all shadow-lg shadow-primary/20 cursor-pointer"
           >
             <Plus size={18} />
@@ -244,9 +298,27 @@ export default function SectionManagement() {
                       </td>
                       <td className="px-6 py-4">
                         <div className="flex items-center justify-center gap-2">
-                          <button className="p-2 text-slate-400 hover:text-primary transition-all cursor-pointer" title="View Students"><Eye size={18} /></button>
-                          <button className="p-2 text-slate-400 hover:text-amber-600 transition-all cursor-pointer" title="Edit Section"><Edit3 size={18} /></button>
-                          <button className="p-2 text-slate-400 hover:text-red-600 transition-all cursor-pointer" title="Delete Section"><Trash2 size={18} /></button>
+                          <button 
+                            onClick={() => openModal("view", sec)}
+                            className="p-2 text-slate-400 hover:text-primary transition-all cursor-pointer" 
+                            title="View Details"
+                          >
+                            <Eye size={18} />
+                          </button>
+                          <button 
+                            onClick={() => openModal("edit", sec)}
+                            className="p-2 text-slate-400 hover:text-amber-600 transition-all cursor-pointer" 
+                            title="Edit Section"
+                          >
+                            <Edit3 size={18} />
+                          </button>
+                          <button 
+                            onClick={() => openModal("delete", sec)}
+                            className="p-2 text-slate-400 hover:text-red-600 transition-all cursor-pointer" 
+                            title="Delete Section"
+                          >
+                            <Trash2 size={18} />
+                          </button>
                         </div>
                       </td>
                     </motion.tr>
@@ -283,103 +355,166 @@ export default function SectionManagement() {
               <div className="p-8">
                 <div className="flex items-center justify-between mb-8">
                   <div>
-                    <h2 className="text-2xl font-black text-slate-800 uppercase tracking-tight">Create <span className="text-primary">Section</span></h2>
-                    <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mt-1">Assign Class & Room Space</p>
+                    <h2 className="text-2xl font-black text-slate-800 uppercase tracking-tight">
+                      {modalMode === "add" && <>Create <span className="text-primary">Section</span></>}
+                      {modalMode === "edit" && <>Edit <span className="text-primary">Section</span></>}
+                      {modalMode === "view" && <><span className="text-primary">Section</span> Details</>}
+                      {modalMode === "delete" && <>Delete <span className="text-primary">Section</span></>}
+                    </h2>
+                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mt-2">
+                      {modalMode === "delete" ? "This action cannot be undone" : "Assign Class & Room Space"}
+                    </p>
                   </div>
                   <button onClick={() => setIsModalOpen(false)} className="p-2 hover:bg-slate-100 rounded-full transition-colors">
                     <X size={20} className="text-slate-400" />
                   </button>
                 </div>
 
-                <form onSubmit={handleAddSection} className="grid grid-cols-2 gap-6">
-                  <div className="space-y-4">
-                    <div>
-                      <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-2 block">Section Name</label>
-                      <input 
-                        type="text" 
-                        required
-                        placeholder="e.g. Section A"
-                        value={formData.name}
-                        onChange={(e) => setFormData({...formData, name: e.target.value})}
-                        className="w-full px-5 py-4 bg-slate-50 border border-slate-100 rounded-2xl text-sm font-bold focus:ring-4 focus:ring-primary/10 focus:bg-white outline-none transition-all"
-                      />
+                {modalMode === "delete" ? (
+                  <div className="space-y-6">
+                    <div className="p-6 bg-red-50 border border-red-100 rounded-[2rem] flex items-start gap-4">
+                      <div className="p-3 bg-red-100 text-red-600 rounded-2xl">
+                        <Trash2 size={24} />
+                      </div>
+                      <div>
+                        <p className="text-sm font-bold text-red-900">Delete Confirmation</p>
+                        <p className="text-xs text-red-700 mt-1 leading-relaxed font-medium">
+                          You are about to delete <span className="font-bold underline">{selectedSection?.name}</span>. 
+                          This will remove the section record from the system.
+                        </p>
+                      </div>
                     </div>
-                    <div>
-                      <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-2 block">Section ID</label>
-                      <input 
-                        type="text" 
-                        required
-                        placeholder="e.g. SEC-101"
-                        value={formData.sectionId}
-                        onChange={(e) => setFormData({...formData, sectionId: e.target.value})}
-                        className="w-full px-5 py-4 bg-slate-50 border border-slate-100 rounded-2xl text-sm font-bold focus:ring-4 focus:ring-primary/10 focus:bg-white outline-none transition-all"
-                      />
-                    </div>
-                    <div>
-                      <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-2 block">Room Number</label>
-                      <input 
-                        type="text" 
-                        required
-                        placeholder="e.g. L-401"
-                        value={formData.room}
-                        onChange={(e) => setFormData({...formData, room: e.target.value})}
-                        className="w-full px-5 py-4 bg-slate-50 border border-slate-100 rounded-2xl text-sm font-bold focus:ring-4 focus:ring-primary/10 focus:bg-white outline-none transition-all"
-                      />
-                    </div>
-                  </div>
 
-                  <div className="space-y-4">
-                    <div>
-                      <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-2 block">Select Class</label>
-                      <select 
-                        required
-                        value={formData.classId}
-                        onChange={(e) => setFormData({...formData, classId: e.target.value})}
-                        className="w-full px-5 py-4 bg-slate-50 border border-slate-100 rounded-2xl text-sm font-bold focus:ring-4 focus:ring-primary/10 focus:bg-white outline-none transition-all appearance-none cursor-pointer"
+                    <div className="flex gap-3">
+                      <button 
+                        onClick={() => setIsModalOpen(false)}
+                        className="flex-1 py-4 border border-slate-200 text-slate-600 rounded-2xl text-xs font-black uppercase tracking-widest hover:bg-slate-50 transition-all cursor-pointer"
                       >
-                        <option value="">Select a Class</option>
-                        {classes.map(c => (
-                          <option key={c._id} value={c._id}>{c.name} ({c.code})</option>
-                        ))}
-                      </select>
-                    </div>
-                    <div>
-                      <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-2 block">Class Teacher</label>
-                      <select 
-                        required
-                        value={formData.teacherId}
-                        onChange={(e) => setFormData({...formData, teacherId: e.target.value})}
-                        className="w-full px-5 py-4 bg-slate-50 border border-slate-100 rounded-2xl text-sm font-bold focus:ring-4 focus:ring-primary/10 focus:bg-white outline-none transition-all appearance-none cursor-pointer"
+                        Cancel
+                      </button>
+                      <button 
+                        onClick={handleDelete}
+                        disabled={isSubmitting}
+                        className="flex-1 py-4 bg-red-600 text-white rounded-2xl text-xs font-black uppercase tracking-widest hover:bg-red-700 transition-all shadow-xl shadow-red-200 disabled:opacity-50 flex items-center justify-center gap-2 cursor-pointer"
                       >
-                        <option value="">Select a Teacher</option>
-                        {teachers.map(t => (
-                          <option key={t._id} value={t._id}>{t.name}</option>
-                        ))}
-                      </select>
-                    </div>
-                    <div>
-                      <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-2 block">Capacity</label>
-                      <input 
-                        type="number" 
-                        required
-                        min="1"
-                        value={formData.capacity}
-                        onChange={(e) => setFormData({...formData, capacity: parseInt(e.target.value)})}
-                        className="w-full px-5 py-4 bg-slate-50 border border-slate-100 rounded-2xl text-sm font-bold focus:ring-4 focus:ring-primary/10 focus:bg-white outline-none transition-all"
-                      />
+                        {isSubmitting ? <Loader2 size={18} className="animate-spin" /> : "Delete Now"}
+                      </button>
                     </div>
                   </div>
+                ) : (
+                  <form onSubmit={handleSubmit} className="grid grid-cols-2 gap-6">
+                    <div className="space-y-4">
+                      <div>
+                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-2 block">Section Name</label>
+                        <input 
+                          type="text" 
+                          required
+                          disabled={modalMode === "view"}
+                          placeholder="e.g. Section A"
+                          value={formData.name}
+                          onChange={(e) => setFormData({...formData, name: e.target.value})}
+                          className="w-full px-5 py-4 bg-slate-50 border border-slate-100 rounded-2xl text-sm font-bold focus:ring-4 focus:ring-primary/10 focus:bg-white outline-none transition-all disabled:opacity-60"
+                        />
+                      </div>
+                      <div>
+                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-2 block">Section ID</label>
+                        <input 
+                          type="text" 
+                          required
+                          disabled={modalMode === "view"}
+                          placeholder="e.g. SEC-101"
+                          value={formData.sectionId}
+                          onChange={(e) => setFormData({...formData, sectionId: e.target.value})}
+                          className="w-full px-5 py-4 bg-slate-50 border border-slate-100 rounded-2xl text-sm font-bold focus:ring-4 focus:ring-primary/10 focus:bg-white outline-none transition-all disabled:opacity-60"
+                        />
+                      </div>
+                      <div>
+                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-2 block">Room Number</label>
+                        <input 
+                          type="text" 
+                          required
+                          disabled={modalMode === "view"}
+                          placeholder="e.g. L-401"
+                          value={formData.room}
+                          onChange={(e) => setFormData({...formData, room: e.target.value})}
+                          className="w-full px-5 py-4 bg-slate-50 border border-slate-100 rounded-2xl text-sm font-bold focus:ring-4 focus:ring-primary/10 focus:bg-white outline-none transition-all disabled:opacity-60"
+                        />
+                      </div>
+                    </div>
 
-                  <div className="col-span-2 pt-4">
-                    <button 
-                      type="submit" 
-                      disabled={isSubmitting}
-                      className="w-full py-4 bg-primary text-white rounded-2xl font-black uppercase tracking-widest text-sm shadow-xl shadow-primary/20 hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center justify-center gap-2"
-                    >
-                      {isSubmitting ? <Loader2 size={18} className="animate-spin" /> : <><Plus size={18} /> Create Section</>}
-                    </button>
-                  </div>
-                </form>
+                    <div className="space-y-4">
+                      <div>
+                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-2 block">Select Class</label>
+                        <select 
+                          required
+                          disabled={modalMode === "view"}
+                          value={formData.classId}
+                          onChange={(e) => setFormData({...formData, classId: e.target.value})}
+                          className="w-full px-5 py-4 bg-slate-50 border border-slate-100 rounded-2xl text-sm font-bold focus:ring-4 focus:ring-primary/10 focus:bg-white outline-none transition-all cursor-pointer disabled:opacity-60"
+                        >
+                          <option value="">Select a Class</option>
+                          {classes.map(c => (
+                            <option key={c._id} value={c._id}>{c.name} ({c.code})</option>
+                          ))}
+                        </select>
+                      </div>
+                      <div>
+                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-2 block">Class Teacher</label>
+                        <select 
+                          required
+                          disabled={modalMode === "view"}
+                          value={formData.teacherId}
+                          onChange={(e) => setFormData({...formData, teacherId: e.target.value})}
+                          className="w-full px-5 py-4 bg-slate-50 border border-slate-100 rounded-2xl text-sm font-bold focus:ring-4 focus:ring-primary/10 focus:bg-white outline-none transition-all cursor-pointer disabled:opacity-60"
+                        >
+                          <option value="">Select a Teacher</option>
+                          {teachers.map(t => (
+                            <option key={t._id} value={t._id}>{t.name}</option>
+                          ))}
+                        </select>
+                      </div>
+                      <div>
+                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-2 block">Capacity</label>
+                        <input 
+                          type="number" 
+                          required
+                          min="1"
+                          disabled={modalMode === "view"}
+                          value={formData.capacity}
+                          onChange={(e) => setFormData({...formData, capacity: parseInt(e.target.value)})}
+                          className="w-full px-5 py-4 bg-slate-50 border border-slate-100 rounded-2xl text-sm font-bold focus:ring-4 focus:ring-primary/10 focus:bg-white outline-none transition-all disabled:opacity-60"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="col-span-2 pt-4">
+                      {modalMode === "view" ? (
+                        <button 
+                          type="button"
+                          onClick={() => setIsModalOpen(false)}
+                          className="w-full py-4 border border-slate-200 text-slate-600 rounded-2xl font-black uppercase tracking-widest text-sm hover:bg-slate-50 transition-all cursor-pointer"
+                        >
+                          Close Details
+                        </button>
+                      ) : (
+                        <button 
+                          type="submit" 
+                          disabled={isSubmitting}
+                          className="w-full py-4 bg-primary text-white rounded-2xl font-black uppercase tracking-widest text-sm shadow-xl shadow-primary/20 hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center justify-center gap-2 cursor-pointer"
+                        >
+                          {isSubmitting ? (
+                            <Loader2 size={18} className="animate-spin" />
+                          ) : (
+                            <>
+                              <Plus size={18} /> 
+                              {modalMode === "edit" ? "Update Section" : "Create Section"}
+                            </>
+                          )}
+                        </button>
+                      )}
+                    </div>
+                  </form>
+                )}
               </div>
             </motion.div>
           </div>
