@@ -85,9 +85,11 @@ const seedData = async () => {
       { title: "Final Exam Schedule Summer 2026", content: "The final exam schedule is now available.", category: "Academic", priority: "High", targetAudience: "Students" },
     ]);
 
-    // Create Staff
-    await Staff.insertMany([
-      { name: "Rahim Uddin", email: "rahim@nub.edu.bd", staffId: "STF001", designation: "Accountant", department: "Accounts", status: "Active" },
+    // Create Attendance Records
+    await Attendance.insertMany([
+      { studentId: students[0]._id, classId: classes[0]._id, date: new Date(), status: "Present", remark: "On time" },
+      { studentId: students[1]._id, classId: classes[0]._id, date: new Date(), status: "Late", remark: "Traffic" },
+      { studentId: students[2]._id, classId: classes[1]._id, date: new Date(), status: "Present", remark: "On time" },
     ]);
 
     console.log("Database seeded successfully!");
