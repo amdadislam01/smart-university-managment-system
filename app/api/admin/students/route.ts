@@ -8,7 +8,10 @@ export async function GET(request: Request) {
     const { searchParams } = new URL(request.url);
     const query: any = {};
 
+    const sectionId = searchParams.get("sectionId");
+    const classId = searchParams.get("classId");
     const search = searchParams.get("search");
+
     if (search) {
       query.$or = [
         { name: { $regex: search, $options: "i" } },
@@ -16,6 +19,9 @@ export async function GET(request: Request) {
         { email: { $regex: search, $options: "i" } },
       ];
     }
+
+    if (sectionId) query.sectionId = sectionId;
+    if (classId) query.classId = classId;
 
     const students = await Student.find(query).sort({ createdAt: -1 });
     return NextResponse.json(students);
