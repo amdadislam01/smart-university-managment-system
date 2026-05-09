@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { 
   Upload, 
   FileSpreadsheet, 
@@ -16,18 +16,230 @@ import {
   Download,
   ShieldCheck,
   ArrowUpRight,
-  ClipboardList
+  ClipboardList,
+  Loader2
 } from "lucide-react";
 import { motion } from "framer-motion";
-
-const recentUploads = [
-  { id: "UP-101", course: "Data Structures", code: "CSE-2101", section: "A", type: "Mid-Term", status: "Verified", date: "2026-04-20" },
-  { id: "UP-102", course: "Circuit Theory", code: "EEE-1102", section: "B", type: "Final Exam", status: "Pending", date: "2026-04-22" },
-  { id: "UP-103", course: "Microeconomics", code: "BBA-1201", section: "A", type: "Quiz 2", status: "Verified", date: "2026-04-18" },
-  { id: "UP-104", course: "English I", code: "ENG-1011", section: "C", type: "Assignment", status: "Rejected", date: "2026-04-24" },
-];
+import { toast } from "react-hot-toast";
 
 export default function MarksUpload() {
+  const [courses, setCourses] = useState<any[]>([]);
+  const [sections, setSections] = useState<any[]>([]);
+  const [recentUploads, setRecentUploads] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [uploading, setUploading] = useState(false);
+  const [isManualEntryOpen, setIsManualEntryOpen] = useState(false);
+  const [manualEntryStudents, setManualEntryStudents] = useState<any[]>([]);
+  const [isSubmittingManual, setIsSubmittingManual] = useState(false);
+  
+  // Selection state
+  const [selectedCourse, setSelectedCourse] = useState("");
+  const [selectedSection, setSelectedSection] = useState("");
+  const [assessmentType, setAssessmentType] = useState("Midterm");
+  const [file, setFile] = useState<File | null>(null);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const [coursesRes, sectionsRes, marksRes] = await Promise.all([
+          fetch("/api/admin/courses"),
+          fetch("/api/admin/sections"),
+          fetch("/api/admin/marks")
+        ]);
+
+        const coursesData = await coursesRes.json();
+        const sectionsData = await sectionsRes.json();
+        const marksData = await marksRes.json();
+
+        setCourses(Array.isArray(coursesData) ? coursesData : []);
+        setSections(Array.isArray(sectionsData) ? sectionsData : []);
+        setRecentUploads(Array.isArray(marksData) ? marksData : []);
+        
+        if (coursesData.length > 0) setSelectedCourse(coursesData[0]._id);
+        if (sectionsData.length > 0) setSelectedSection(sectionsData[0]._id);
+      } catch (error) {
+        console.error("Error fetching data:", error);
+        toast.error("Failed to load data");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+  }, []);
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      setFile(e.target.files[0]);
+      toast.success(`File "${e.target.files[0].name}" selected`);
+    }
+  };
+
+  const handleUpload = async () => {
+    if (!file) {
+      toast.error("Please select a file first");
+      return;
+    }
+    if (!selectedCourse || !selectedSection) {
+      toast.error("Please select course and section");
+      return;
+    }
+
+    setUploading(true);
+    
+    // Simulate parsing and uploading
+    // In a real app, you'd parse CSV and send to API
+    setTimeout(async () => {
+      try {
+        // Mock data for submission
+        const mockMarks = [
+          {
+            studentId: "645a1b2c3d4e5f6a7b8c9d01", // Should be real IDs
+            classId: selectedCourse,
+            examType: assessmentType,
+            obtainedMarks: 25,
+            totalMarks: 30,
+            grade: "A",
+            remarks: "Good"
+          }
+        ];
+
+        const res = await fetch("/api/admin/marks", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(mockMarks),
+        });
+
+        if (res.ok) {
+          toast.success("Marks uploaded successfully!");
+          setFile(null);
+          // Refresh history
+          const marksRes = await fetch("/api/admin/marks");
+          const marksData = await marksRes.json();
+          setRecentUploads(marksData);
+        } else {
+          toast.error("Failed to upload marks");
+        }
+      } catch (error) {
+        toast.error("An error occurred during upload");
+      } finally {
+        setUploading(false);
+      }
+    }, 1500);
+  };
+
+  const downloadTemplate = async () => {
+    if (!selectedSection) {
+      toast.error("Please select a section first");
+      return;
+    }
+
+    try {
+      const res = await fetch(`/api/admin/students?sectionId=${selectedSection}`);
+      const students = await res.json();
+      
+      if (!students || students.length === 0) {
+        toast.error("No students found in this section");
+        return;
+      }
+
+      const csvContent = [
+        ["Student ID", "Name", "Marks", "Remarks"],
+        ...students.map((s: any) => [s.studentId, s.name, "", ""])
+      ].map(e => e.join(",")).join("\n");
+
+      const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+      const link = document.createElement("a");
+      const url = URL.createObjectURL(blob);
+      link.setAttribute("href", url);
+      link.setAttribute("download", `marks_template_${assessmentType}.csv`);
+      link.style.visibility = "hidden";
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      toast.success("Template downloaded!");
+    } catch (error) {
+      toast.error("Failed to download template");
+    }
+  };
+
+  const openManualEntry = async () => {
+    if (!selectedCourse || !selectedSection) {
+      toast.error("Please select course and section first");
+      return;
+    }
+
+    try {
+      const res = await fetch(`/api/admin/students?sectionId=${selectedSection}`);
+      const students = await res.json();
+      
+      if (!students || students.length === 0) {
+        toast.error("No students found in this section");
+        return;
+      }
+
+      setManualEntryStudents(students.map((s: any) => ({
+        studentId: s._id,
+        regId: s.studentId,
+        name: s.name,
+        obtainedMarks: "",
+        remarks: ""
+      })));
+      setIsManualEntryOpen(true);
+    } catch (error) {
+      toast.error("Failed to load students");
+    }
+  };
+
+  const handleManualMarkChange = (id: string, field: string, value: string) => {
+    setManualEntryStudents(prev => prev.map(s => 
+      s.studentId === id ? { ...s, [field]: value } : s
+    ));
+  };
+
+  const submitManualEntry = async () => {
+    setIsSubmittingManual(true);
+    try {
+      const payload = manualEntryStudents.map(s => ({
+        studentId: s.studentId,
+        classId: selectedCourse,
+        examType: assessmentType,
+        obtainedMarks: Number(s.obtainedMarks) || 0,
+        totalMarks: assessmentType === 'Midterm' ? 30 : assessmentType === 'Final' ? 50 : 10,
+        remarks: s.remarks
+      }));
+
+      const res = await fetch("/api/admin/marks", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+
+      if (res.ok) {
+        toast.success("Marks submitted successfully!");
+        setIsManualEntryOpen(false);
+        // Refresh history
+        const marksRes = await fetch("/api/admin/marks");
+        const marksData = await marksRes.json();
+        setRecentUploads(marksData);
+      } else {
+        toast.error("Failed to submit marks");
+      }
+    } catch (error) {
+      toast.error("An error occurred");
+    } finally {
+      setIsSubmittingManual(false);
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <Loader2 className="w-8 h-8 text-primary animate-spin" />
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-8 pb-12">
       {/* Page Header */}
@@ -37,11 +249,17 @@ export default function MarksUpload() {
           <p className="text-slate-500">Submit and verify student academic performances for various assessments.</p>
         </div>
         <div className="flex items-center gap-3">
-          <button className="flex items-center gap-2 px-4 py-2.5 bg-white border border-slate-200 rounded-xl text-sm font-bold text-slate-600 hover:bg-slate-50 transition-all cursor-pointer shadow-sm">
+          <button 
+            onClick={downloadTemplate}
+            className="flex items-center gap-2 px-4 py-2.5 bg-white border border-slate-200 rounded-xl text-sm font-bold text-slate-600 hover:bg-slate-50 transition-all cursor-pointer shadow-sm"
+          >
             <Download size={18} />
             CSV Template
           </button>
-          <button className="flex items-center gap-2 px-6 py-2.5 bg-primary text-white rounded-xl text-sm font-bold hover:bg-primary/90 transition-all shadow-lg shadow-primary/20 cursor-pointer">
+          <button 
+            onClick={openManualEntry}
+            className="flex items-center gap-2 px-6 py-2.5 bg-primary text-white rounded-xl text-sm font-bold hover:bg-primary/90 transition-all shadow-lg shadow-primary/20 cursor-pointer"
+          >
             <Plus size={18} />
             Manual Entry
           </button>
@@ -60,43 +278,83 @@ export default function MarksUpload() {
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                    <div>
                       <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest block mb-2">Select Course</label>
-                      <select className="w-full bg-white border border-slate-200 rounded-xl p-3 text-sm font-bold text-slate-700 outline-none focus:ring-2 focus:ring-primary/20">
-                        <option>Computer Fundamentals (CSE-1101)</option>
-                        <option>Electronic Circuits (EEE-1201)</option>
-                        <option>Principles of BBA (BBA-2101)</option>
+                      <select 
+                        value={selectedCourse}
+                        onChange={(e) => setSelectedCourse(e.target.value)}
+                        className="w-full bg-white border border-slate-200 rounded-xl p-3 text-sm font-bold text-slate-700 outline-none focus:ring-2 focus:ring-primary/20"
+                      >
+                        {courses.map(course => (
+                          <option key={course._id} value={course._id}>
+                            {course.title} ({course.courseCode})
+                          </option>
+                        ))}
                       </select>
                    </div>
                    <div>
                       <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest block mb-2">Select Section</label>
-                      <select className="w-full bg-white border border-slate-200 rounded-xl p-3 text-sm font-bold text-slate-700 outline-none focus:ring-2 focus:ring-primary/20">
-                        <option>Section A</option>
-                        <option>Section B</option>
-                        <option>Section C</option>
+                      <select 
+                        value={selectedSection}
+                        onChange={(e) => setSelectedSection(e.target.value)}
+                        className="w-full bg-white border border-slate-200 rounded-xl p-3 text-sm font-bold text-slate-700 outline-none focus:ring-2 focus:ring-primary/20"
+                      >
+                        {sections.map(section => (
+                          <option key={section._id} value={section._id}>
+                            {section.name} ({section.sectionId})
+                          </option>
+                        ))}
                       </select>
                    </div>
                    <div>
                       <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest block mb-2">Assessment Type</label>
-                      <select className="w-full bg-white border border-slate-200 rounded-xl p-3 text-sm font-bold text-slate-700 outline-none focus:ring-2 focus:ring-primary/20">
-                        <option>Mid-Term (30%)</option>
-                        <option>Final Exam (50%)</option>
-                        <option>Quiz 1 (10%)</option>
-                        <option>Assignment (10%)</option>
+                      <select 
+                        value={assessmentType}
+                        onChange={(e) => setAssessmentType(e.target.value)}
+                        className="w-full bg-white border border-slate-200 rounded-xl p-3 text-sm font-bold text-slate-700 outline-none focus:ring-2 focus:ring-primary/20"
+                      >
+                        <option value="Midterm">Mid-Term (30%)</option>
+                        <option value="Final">Final Exam (50%)</option>
+                        <option value="Quiz">Quiz (10%)</option>
+                        <option value="Assignment">Assignment (10%)</option>
                       </select>
                    </div>
                 </div>
              </div>
 
              <div className="p-12">
-                <div className="max-w-xl mx-auto border-2 border-dashed border-slate-200 rounded-3xl p-12 text-center hover:bg-slate-50 hover:border-primary/30 transition-all group cursor-pointer">
+                <div 
+                  onClick={() => document.getElementById('file-upload')?.click()}
+                  className="max-w-xl mx-auto border-2 border-dashed border-slate-200 rounded-3xl p-12 text-center hover:bg-slate-50 hover:border-primary/30 transition-all group cursor-pointer"
+                >
+                   <input 
+                     id="file-upload" 
+                     type="file" 
+                     accept=".csv,.xlsx" 
+                     className="hidden" 
+                     onChange={handleFileChange}
+                   />
                    <div className="w-16 h-16 bg-primary/5 text-primary rounded-2xl flex items-center justify-center mx-auto mb-6 group-hover:scale-110 group-hover:bg-primary group-hover:text-white transition-all">
-                      <Upload size={32} />
+                      {uploading ? <Loader2 size={32} className="animate-spin" /> : <Upload size={32} />}
                    </div>
-                   <h4 className="text-xl font-bold text-slate-800 mb-2">Upload Excel or CSV File</h4>
-                   <p className="text-sm text-slate-400 mb-8">Drag and drop your marksheet file here or click to browse files from your computer.</p>
-                   <div className="flex justify-center gap-3">
-                      <span className="px-4 py-2 bg-slate-100 rounded-lg text-xs font-bold text-slate-500">.XLSX</span>
-                      <span className="px-4 py-2 bg-slate-100 rounded-lg text-xs font-bold text-slate-500">.CSV</span>
-                   </div>
+                   <h4 className="text-xl font-bold text-slate-800 mb-2">
+                     {file ? file.name : "Upload Excel or CSV File"}
+                   </h4>
+                   <p className="text-sm text-slate-400 mb-8">
+                     {file ? "File ready for upload. Click the button below to process." : "Drag and drop your marksheet file here or click to browse files from your computer."}
+                   </p>
+                   {file ? (
+                     <button 
+                       onClick={(e) => { e.stopPropagation(); handleUpload(); }}
+                       disabled={uploading}
+                       className="px-8 py-3 bg-primary text-white rounded-xl text-sm font-bold hover:bg-primary/90 transition-all shadow-lg shadow-primary/20 cursor-pointer disabled:opacity-50"
+                     >
+                       {uploading ? "Uploading..." : "Start Upload"}
+                     </button>
+                   ) : (
+                     <div className="flex justify-center gap-3">
+                        <span className="px-4 py-2 bg-slate-100 rounded-lg text-xs font-bold text-slate-500">.XLSX</span>
+                        <span className="px-4 py-2 bg-slate-100 rounded-lg text-xs font-bold text-slate-500">.CSV</span>
+                     </div>
+                   )}
                 </div>
              </div>
           </div>
@@ -114,49 +372,55 @@ export default function MarksUpload() {
                 <table className="w-full text-left">
                   <thead className="bg-slate-50 text-[10px] uppercase tracking-wider text-slate-500 font-bold">
                     <tr>
-                      <th className="px-6 py-4">Submission ID</th>
+                      <th className="px-6 py-4">Student ID</th>
                       <th className="px-6 py-4">Course & Type</th>
-                      <th className="px-6 py-4">Sec</th>
+                      <th className="px-6 py-4">Marks</th>
                       <th className="px-6 py-4">Status</th>
                       <th className="px-6 py-4">Date</th>
                       <th className="px-6 py-4 text-center">Action</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-50">
-                    {recentUploads.map((up, i) => (
+                    {recentUploads.length > 0 ? recentUploads.map((up, i) => (
                       <motion.tr 
-                        key={i}
+                        key={up._id || i}
                         initial={{ opacity: 0, x: -10 }}
                         animate={{ opacity: 1, x: 0 }}
                         transition={{ delay: i * 0.05 }}
                         className="hover:bg-slate-50/50 transition-colors group"
                       >
                         <td className="px-6 py-4">
-                           <span className="text-xs font-bold text-primary">{up.id}</span>
+                           <span className="text-xs font-bold text-primary">{up.studentId?.studentId || "N/A"}</span>
                         </td>
                         <td className="px-6 py-4">
                            <div className="flex flex-col">
-                              <span className="text-sm font-bold text-slate-800">{up.course}</span>
-                              <span className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">{up.type}</span>
+                              <span className="text-sm font-bold text-slate-800">{up.classId?.name || up.classId?.title || "N/A"}</span>
+                              <span className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">{up.examType}</span>
                            </div>
                         </td>
-                        <td className="px-6 py-4 text-xs font-bold text-slate-700">{up.section}</td>
+                        <td className="px-6 py-4 text-xs font-bold text-slate-700">
+                          {up.obtainedMarks} / {up.totalMarks}
+                        </td>
                         <td className="px-6 py-4">
                            <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold uppercase ${
-                              up.status === 'Verified' ? 'bg-emerald-100 text-emerald-700' : 
-                              up.status === 'Pending' ? 'bg-amber-100 text-amber-700' : 'bg-red-100 text-red-700'
+                              'bg-emerald-100 text-emerald-700'
                            }`}>
-                              {up.status === 'Verified' ? <CheckCircle2 size={12} /> : 
-                               up.status === 'Pending' ? <Clock size={12} /> : <AlertCircle size={12} />}
-                              {up.status}
+                              <CheckCircle2 size={12} />
+                              Verified
                            </span>
                         </td>
-                        <td className="px-6 py-4 text-xs font-medium text-slate-500">{up.date}</td>
+                        <td className="px-6 py-4 text-xs font-medium text-slate-500">
+                          {new Date(up.createdAt).toLocaleDateString()}
+                        </td>
                         <td className="px-6 py-4 text-center">
                            <button className="p-2 text-slate-400 hover:text-primary transition-all cursor-pointer"><MoreVertical size={18} /></button>
                         </td>
                       </motion.tr>
-                    ))}
+                    )) : (
+                      <tr>
+                        <td colSpan={6} className="px-6 py-12 text-center text-slate-400 text-sm">No recent submissions found.</td>
+                      </tr>
+                    )}
                   </tbody>
                 </table>
              </div>
@@ -188,9 +452,9 @@ export default function MarksUpload() {
              </h3>
              <ul className="space-y-3">
                 {[
-                  "Use the standard university template for all CSV uploads.",
-                  "Student IDs must match official university registration records.",
-                  "Mark ranges are validated against course credit weights.",
+                   "Use the standard university template for all CSV uploads.",
+                   "Student IDs must match official university registration records.",
+                   "Mark ranges are validated against course credit weights.",
                 ].map((item, i) => (
                   <li key={i} className="flex gap-3 text-[11px] text-slate-500 font-medium">
                      <div className="w-1.5 h-1.5 bg-primary rounded-full mt-1 shrink-0" />
@@ -205,7 +469,10 @@ export default function MarksUpload() {
              <div>
                 <h5 className="text-xs font-bold text-blue-900">Need a Template?</h5>
                 <p className="text-[10px] text-blue-700 mt-1 leading-relaxed">Download the pre-formatted Excel template with student names already filled for your selected section.</p>
-                <button className="mt-3 text-[10px] font-extrabold text-blue-800 uppercase tracking-widest flex items-center gap-1 hover:underline cursor-pointer">
+                <button 
+                  onClick={downloadTemplate}
+                  className="mt-3 text-[10px] font-extrabold text-blue-800 uppercase tracking-widest flex items-center gap-1 hover:underline cursor-pointer"
+                >
                    Download Now
                    <Download size={12} />
                 </button>
@@ -213,6 +480,99 @@ export default function MarksUpload() {
           </div>
         </div>
       </div>
+
+      {/* Manual Entry Modal */}
+      {isManualEntryOpen && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm"
+            onClick={() => setIsManualEntryOpen(false)}
+          />
+          <motion.div 
+            initial={{ opacity: 0, scale: 0.95, y: 20 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            className="relative w-full max-w-4xl bg-white rounded-[2rem] shadow-2xl overflow-hidden flex flex-col max-h-[90vh]"
+          >
+            <div className="p-8 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
+              <div>
+                <h2 className="text-2xl font-bold text-slate-800">Manual Marks Entry</h2>
+                <p className="text-xs text-slate-500 font-bold uppercase tracking-widest mt-1">
+                  {courses.find(c => c._id === selectedCourse)?.title} - {assessmentType}
+                </p>
+              </div>
+              <button 
+                onClick={() => setIsManualEntryOpen(false)}
+                className="p-2 hover:bg-white rounded-full transition-colors border border-transparent hover:border-slate-200"
+              >
+                <Plus size={20} className="rotate-45 text-slate-400" />
+              </button>
+            </div>
+
+            <div className="flex-1 overflow-y-auto p-8">
+              <table className="w-full text-left border-collapse">
+                <thead className="sticky top-0 bg-white z-10">
+                  <tr className="text-[10px] uppercase tracking-widest text-slate-400 font-black border-b border-slate-100">
+                    <th className="pb-4 px-2">Student ID</th>
+                    <th className="pb-4 px-2">Student Name</th>
+                    <th className="pb-4 px-2 w-32">Obtained Marks</th>
+                    <th className="pb-4 px-2">Remarks</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-50">
+                  {manualEntryStudents.map((student) => (
+                    <tr key={student.studentId} className="group hover:bg-slate-50/50 transition-colors">
+                      <td className="py-4 px-2 text-xs font-bold text-primary">{student.regId}</td>
+                      <td className="py-4 px-2 text-sm font-medium text-slate-700">{student.name}</td>
+                      <td className="py-4 px-2">
+                        <input 
+                          type="number"
+                          placeholder="00"
+                          value={student.obtainedMarks}
+                          onChange={(e) => handleManualMarkChange(student.studentId, 'obtainedMarks', e.target.value)}
+                          className="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-sm font-bold focus:ring-2 focus:ring-primary/20 outline-none"
+                        />
+                      </td>
+                      <td className="py-4 px-2">
+                        <input 
+                          type="text"
+                          placeholder="Add comments..."
+                          value={student.remarks}
+                          onChange={(e) => handleManualMarkChange(student.studentId, 'remarks', e.target.value)}
+                          className="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-sm font-medium focus:ring-2 focus:ring-primary/20 outline-none"
+                        />
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            <div className="p-8 border-t border-slate-100 bg-slate-50/50 flex items-center justify-between">
+              <div className="text-xs text-slate-500 font-medium">
+                Total Students: <span className="font-bold text-slate-800">{manualEntryStudents.length}</span>
+              </div>
+              <div className="flex items-center gap-3">
+                <button 
+                  onClick={() => setIsManualEntryOpen(false)}
+                  className="px-6 py-3 border border-slate-200 text-slate-600 rounded-xl text-xs font-bold uppercase tracking-widest hover:bg-white transition-all cursor-pointer"
+                >
+                  Cancel
+                </button>
+                <button 
+                  onClick={submitManualEntry}
+                  disabled={isSubmittingManual}
+                  className="px-8 py-3 bg-primary text-white rounded-xl text-xs font-bold uppercase tracking-widest hover:bg-primary/90 transition-all shadow-lg shadow-primary/20 disabled:opacity-50 flex items-center gap-2 cursor-pointer"
+                >
+                  {isSubmittingManual ? <Loader2 size={16} className="animate-spin" /> : <CheckCircle2 size={16} />}
+                  Submit All Marks
+                </button>
+              </div>
+            </div>
+          </motion.div>
+        </div>
+      )}
     </div>
   );
 }
