@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
 import { 
   FileCheck, 
   Search, 
@@ -17,9 +17,13 @@ import {
   MoreVertical,
   CheckCircle2,
   AlertCircle,
-  FileText
+  FileText,
+  Loader2,
+  MapPin,
+  Calendar
 } from "lucide-react";
 import { motion } from "framer-motion";
+import { toast } from "react-hot-toast";
 
 const requestHistory = [
   { id: "TR-5501", student: "Md. Amin Islam", stuId: "STU-1001", type: "Official", status: "Verified", date: "2026-04-20" },
@@ -28,10 +32,43 @@ const requestHistory = [
 ];
 
 export default function TranscriptManagement() {
+  const [stuId, setStuId] = useState("");
+  const [transcriptData, setTranscriptData] = useState<any>(null);
+  const [loading, setLoading] = useState(false);
+
+  const fetchTranscript = async () => {
+    if (!stuId) {
+      toast.error("Please enter a student ID");
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const res = await fetch(`/api/admin/marks/transcript/${stuId}`);
+      const data = await res.json();
+      
+      if (res.ok) {
+        setTranscriptData(data);
+        toast.success("Transcript generated successfully!");
+      } else {
+        toast.error(data.error || "Student not found");
+        setTranscriptData(null);
+      }
+    } catch (error) {
+      toast.error("Failed to fetch transcript");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handlePrint = () => {
+    window.print();
+  };
+
   return (
-    <div className="space-y-8 pb-12">
-      {/* Page Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+    <div className="space-y-8 pb-12 print:p-0">
+      {/* Page Header - Hidden on Print */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 print:hidden">
         <div>
           <h1 className="text-2xl font-bold text-slate-800">Academic Transcripts</h1>
           <p className="text-slate-500">Generate, verify and manage official institutional academic transcripts.</p>
@@ -52,40 +89,164 @@ export default function TranscriptManagement() {
         {/* Transcript Generator & Preview Area */}
         <div className="xl:col-span-2 space-y-6">
           <div className="bg-white rounded-3xl border border-slate-100 shadow-sm overflow-hidden">
-             <div className="p-8 border-b border-slate-50 bg-slate-50/30">
+             <div className="p-8 border-b border-slate-50 bg-slate-50/30 print:hidden">
                 <h3 className="font-bold text-slate-800 mb-6 flex items-center gap-2">
                    <Search size={20} className="text-primary" />
                    Generate Student Transcript
                 </h3>
-                <div className="flex flex-col md:flex-row gap-4">
+                <form 
+                  onSubmit={(e) => { e.preventDefault(); fetchTranscript(); }}
+                  className="flex flex-col md:flex-row gap-4"
+                >
                    <div className="flex-1 relative">
                       <User className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
                       <input 
                         type="text" 
-                        placeholder="Enter Student ID (e.g. STU-1001)..." 
+                        placeholder="Enter Student ID (e.g. STU001)..." 
+                        value={stuId}
+                        onChange={(e) => setStuId(e.target.value)}
                         className="w-full pl-12 pr-4 py-4 bg-white border border-slate-200 rounded-2xl text-sm font-bold outline-none focus:ring-4 focus:ring-primary/10 transition-all"
                       />
                    </div>
-                   <button className="px-8 py-4 bg-primary text-white font-extrabold rounded-2xl shadow-xl shadow-primary/20 hover:scale-[1.02] active:scale-[0.98] transition-all cursor-pointer">
+                   <button 
+                     type="submit"
+                     disabled={loading}
+                     className="px-8 py-4 bg-primary text-white font-extrabold rounded-2xl shadow-xl shadow-primary/20 hover:scale-[1.02] active:scale-[0.98] transition-all cursor-pointer flex items-center justify-center gap-2 disabled:opacity-50"
+                   >
+                      {loading ? <Loader2 className="animate-spin" size={20} /> : null}
                       Fetch Records
                    </button>
-                </div>
+                </form>
              </div>
 
-             {/* Preview Placeholder */}
-             <div className="p-12 flex flex-col items-center justify-center text-center space-y-4">
-                <div className="w-20 h-20 bg-slate-50 rounded-full flex items-center justify-center text-slate-200">
-                   <FileText size={40} />
-                </div>
-                <div>
-                   <h4 className="text-lg font-bold text-slate-400">No Transcript Loaded</h4>
-                   <p className="text-sm text-slate-300 max-w-[300px] mx-auto">Enter a valid student ID above to preview and generate their official transcript.</p>
-                </div>
-             </div>
+             {/* Transcript Content */}
+             {transcriptData ? (
+               <div className="p-8 space-y-8 bg-white" id="printable-transcript">
+                  {/* Transcript Header */}
+                  <div className="flex justify-between items-start border-b-2 border-slate-900 pb-8">
+                    <div className="flex items-center gap-4">
+                       <div className="w-16 h-16 bg-primary rounded-2xl flex items-center justify-center text-white font-black text-2xl shadow-lg">
+                          NUB
+                       </div>
+                       <div>
+                          <h2 className="text-2xl font-black text-slate-900 uppercase tracking-tighter">NextGen University</h2>
+                          <p className="text-xs font-bold text-slate-500 uppercase tracking-widest">Office of the Controller of Examinations</p>
+                          <div className="flex items-center gap-4 mt-2 text-[10px] font-bold text-slate-400 uppercase">
+                             <span className="flex items-center gap-1"><MapPin size={10} /> Dhaka, Bangladesh</span>
+                             <span className="flex items-center gap-1"><Calendar size={10} /> Issued: {new Date().toLocaleDateString()}</span>
+                          </div>
+                       </div>
+                    </div>
+                    <div className="text-right print:hidden">
+                       <div className="flex items-center gap-2 mb-4">
+                          <button 
+                            onClick={handlePrint}
+                            className="p-3 bg-slate-100 text-slate-600 rounded-xl hover:bg-slate-200 transition-all"
+                          >
+                             <Printer size={20} />
+                          </button>
+                          <button className="p-3 bg-slate-100 text-slate-600 rounded-xl hover:bg-slate-200 transition-all">
+                             <Download size={20} />
+                          </button>
+                       </div>
+                    </div>
+                  </div>
+
+                  {/* Student Info Card */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-8 py-6 px-8 bg-slate-50 rounded-3xl border border-slate-100">
+                     <div className="space-y-4">
+                        <div>
+                           <p className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em] mb-1">Student Name</p>
+                           <p className="text-lg font-black text-slate-800">{transcriptData.student.name}</p>
+                        </div>
+                        <div>
+                           <p className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em] mb-1">Student ID</p>
+                           <p className="text-sm font-bold text-primary">{transcriptData.student.studentId}</p>
+                        </div>
+                     </div>
+                     <div className="space-y-4">
+                        <div>
+                           <p className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em] mb-1">Program</p>
+                           <p className="text-sm font-bold text-slate-800">{transcriptData.student.classId?.name || "Undergraduate"}</p>
+                        </div>
+                        <div className="flex gap-8">
+                           <div>
+                              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em] mb-1">CGPA</p>
+                              <p className="text-lg font-black text-emerald-600">{transcriptData.cgpa}</p>
+                           </div>
+                           <div>
+                              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em] mb-1">Total Credits</p>
+                              <p className="text-lg font-black text-slate-800">{transcriptData.totalCredits}</p>
+                           </div>
+                        </div>
+                     </div>
+                  </div>
+
+                  {/* Results Table */}
+                  <div className="overflow-hidden border border-slate-200 rounded-2xl">
+                     <table className="w-full text-left">
+                        <thead className="bg-slate-900 text-[10px] uppercase tracking-widest text-white font-black">
+                           <tr>
+                              <th className="px-6 py-4">Course Details</th>
+                              <th className="px-6 py-4 text-center">Marks (%)</th>
+                              <th className="px-6 py-4 text-center">Grade</th>
+                              <th className="px-6 py-4 text-center">Points</th>
+                              <th className="px-6 py-4 text-center">Credits</th>
+                           </tr>
+                        </thead>
+                        <tbody className="divide-y divide-slate-100">
+                           {transcriptData.results.map((res: any, i: number) => (
+                              <tr key={i} className="hover:bg-slate-50 transition-colors">
+                                 <td className="px-6 py-4">
+                                    <div className="flex flex-col">
+                                       <span className="text-sm font-bold text-slate-800">{res.courseName}</span>
+                                       <span className="text-[10px] font-bold text-slate-400 tracking-widest uppercase">{res.courseCode}</span>
+                                    </div>
+                                 </td>
+                                 <td className="px-6 py-4 text-center text-xs font-bold text-slate-700">{res.percentage}%</td>
+                                 <td className="px-6 py-4 text-center">
+                                    <span className={`px-2.5 py-1 rounded-lg text-xs font-black ${
+                                       res.grade === 'F' ? 'bg-red-100 text-red-600' : 'bg-primary/5 text-primary'
+                                    }`}>{res.grade}</span>
+                                 </td>
+                                 <td className="px-6 py-4 text-center text-sm font-bold text-slate-800">{res.point.toFixed(2)}</td>
+                                 <td className="px-6 py-4 text-center text-sm font-bold text-slate-500">{res.credits}</td>
+                              </tr>
+                           ))}
+                        </tbody>
+                     </table>
+                  </div>
+
+                  {/* Transcript Footer */}
+                  <div className="pt-12 flex justify-between items-end border-t border-slate-100">
+                     <div className="flex items-center gap-4">
+                        <div className="p-3 bg-slate-50 rounded-2xl border border-slate-100">
+                           <QrCode size={48} className="text-slate-800" />
+                        </div>
+                        <p className="text-[9px] text-slate-400 max-w-[150px] leading-relaxed font-medium">Scan this QR code to verify the authenticity of this document on the university portal.</p>
+                     </div>
+                     <div className="text-center">
+                        <div className="w-40 h-px bg-slate-300 mb-2 mx-auto" />
+                        <p className="text-[10px] font-black text-slate-800 uppercase tracking-widest">Controller of Examinations</p>
+                        <p className="text-[8px] font-bold text-slate-400 uppercase tracking-widest mt-1">NextGen University of Bangladesh</p>
+                     </div>
+                  </div>
+               </div>
+             ) : (
+               <div className="p-12 flex flex-col items-center justify-center text-center space-y-4">
+                  <div className="w-20 h-20 bg-slate-50 rounded-full flex items-center justify-center text-slate-200">
+                     <FileText size={40} />
+                  </div>
+                  <div>
+                     <h4 className="text-lg font-bold text-slate-400">No Transcript Loaded</h4>
+                     <p className="text-sm text-slate-300 max-w-[300px] mx-auto">Enter a valid student ID above to preview and generate their official transcript.</p>
+                  </div>
+               </div>
+             )}
           </div>
 
           {/* Transcript Features Info */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 print:hidden">
              <div className="bg-emerald-50 border border-emerald-100 rounded-2xl p-6">
                 <div className="flex items-center gap-3 mb-3">
                    <div className="p-2 bg-emerald-100 text-emerald-600 rounded-lg">
@@ -108,7 +269,7 @@ export default function TranscriptManagement() {
         </div>
 
         {/* Recent Requests Sidebar */}
-        <div className="space-y-6">
+        <div className="space-y-6 print:hidden">
           <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
              <div className="p-5 border-b border-slate-50 flex justify-between items-center bg-slate-50/50">
                 <h3 className="font-bold text-slate-800 text-sm flex items-center gap-2">
