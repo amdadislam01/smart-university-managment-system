@@ -6,6 +6,7 @@ const StudentSchema = new mongoose.Schema(
     email: { type: String, required: true, unique: true },
     studentId: { type: String, required: true, unique: true },
     classId: { type: mongoose.Schema.Types.ObjectId, ref: "Class" },
+    sectionId: { type: mongoose.Schema.Types.ObjectId, ref: "Section" },
     status: { type: String, enum: ["Active", "Inactive"], default: "Active" },
   },
   { timestamps: true }
