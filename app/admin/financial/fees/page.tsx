@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { 
   DollarSign, 
   Plus, 
@@ -18,28 +18,95 @@ import {
   Building2,
   Edit3,
   Trash2,
-  PieChart
+  PieChart,
+  Loader2
 } from "lucide-react";
 import { motion } from "framer-motion";
+import toast from "react-hot-toast";
 
-const feeHeads = [
-  { id: "FH-101", name: "Admission Fee", dept: "All", amount: "25,000", frequency: "One-time", status: "Active" },
-  { id: "FH-102", name: "Tuition Fee (CSE)", dept: "CSE", amount: "65,000", frequency: "Semester", status: "Active" },
-  { id: "FH-103", name: "Library Fee", dept: "All", amount: "2,500", frequency: "Semester", status: "Active" },
-  { id: "FH-104", name: "Lab & Development", dept: "Science/Eng", amount: "12,000", frequency: "Semester", status: "Active" },
-  { id: "FH-105", name: "Student Insurance", dept: "All", amount: "1,200", frequency: "Annual", status: "Active" },
-];
-
-const stats = [
-  { label: "Total Revenue", value: "৳ 24.5M", icon: DollarSign, color: "bg-emerald-500" },
-  { label: "Collection Rate", value: "82.4%", icon: TrendingUp, color: "bg-blue-500" },
-  { label: "Outstanding", value: "৳ 4.2M", icon: AlertCircle, color: "bg-amber-500" },
-  { label: "Total Waivers", value: "৳ 1.8M", icon: PieChart, color: "bg-purple-500" },
-];
+const iconMap: Record<string, any> = {
+  DollarSign,
+  TrendingUp,
+  AlertCircle,
+  PieChart,
+};
 
 export default function FeeStructureManagement() {
+  const [feeHeads, setFeeHeads] = useState<any[]>([]);
+  const [stats, setStats] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [newFee, setNewFee] = useState({
+    name: "",
+    dept: "All",
+    amount: "",
+    frequency: "Semester",
+    status: "Active"
+  });
+
+  const fetchData = async () => {
+    try {
+      setLoading(true);
+      const res = await fetch("/api/admin/financial/fees");
+      const data = await res.json();
+      
+      if (data.error) throw new Error(data.error);
+      
+      setFeeHeads(data.feeHeads || []);
+      setStats(data.stats || []);
+    } catch (error: any) {
+      toast.error("Failed to fetch fee data");
+      console.error(error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchData();
+  }, []);
+
+  const handleAddFeeHead = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      setIsSubmitting(true);
+      const res = await fetch("/api/admin/financial/fees", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(newFee)
+      });
+      
+      const data = await res.json();
+      if (data.error) throw new Error(data.error);
+      
+      toast.success("Fee Head added successfully!");
+      setIsModalOpen(false);
+      setNewFee({ name: "", dept: "All", amount: "", frequency: "Semester", status: "Active" });
+      fetchData(); // Refresh list
+    } catch (error: any) {
+      toast.error(error.message || "Failed to add fee head");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const filteredFeeHeads = feeHeads.filter(fee => 
+    fee.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    fee.dept.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
+  if (loading) {
+    return (
+      <div className="h-[60vh] flex items-center justify-center">
+        <Loader2 className="animate-spin text-primary" size={40} />
+      </div>
+    );
+  }
+
   return (
-    <div className="space-y-8 pb-12">
+    <div className="space-y-8 pb-12 relative">
       {/* Page Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
@@ -51,33 +118,121 @@ export default function FeeStructureManagement() {
             <FileText size={18} />
             Fee Policy
           </button>
-          <button className="flex items-center gap-2 px-6 py-2.5 bg-primary text-white rounded-xl text-sm font-bold hover:bg-primary/90 transition-all shadow-lg shadow-primary/20 cursor-pointer">
+          <button 
+            onClick={() => setIsModalOpen(true)}
+            className="flex items-center gap-2 px-6 py-2.5 bg-primary text-white rounded-xl text-sm font-bold hover:bg-primary/90 transition-all shadow-lg shadow-primary/20 cursor-pointer"
+          >
             <Plus size={18} />
             Add Fee Head
           </button>
         </div>
       </div>
 
+      {/* Add Fee Head Modal */}
+      {isModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+          <motion.div 
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="bg-white rounded-3xl p-6 md:p-7 w-full max-w-md shadow-2xl"
+          >
+            <h2 className="text-xl font-bold text-slate-800 mb-5">Create New Fee Head</h2>
+            <form onSubmit={handleAddFeeHead} className="space-y-4">
+              <div>
+                <label className="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-1.5">Fee Name</label>
+                <input 
+                  required
+                  type="text" 
+                  value={newFee.name}
+                  onChange={(e) => setNewFee({...newFee, name: e.target.value})}
+                  placeholder="e.g. Laboratory Fee"
+                  className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-primary/20 outline-none"
+                />
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-1.5">Department</label>
+                  <select 
+                    value={newFee.dept}
+                    onChange={(e) => setNewFee({...newFee, dept: e.target.value})}
+                    className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm outline-none font-medium"
+                  >
+                    <option value="All">All Departments</option>
+                    <option value="CSE">CSE</option>
+                    <option value="EEE">EEE</option>
+                    <option value="BBA">BBA</option>
+                    <option value="Science/Eng">Science/Eng</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-1.5">Frequency</label>
+                  <select 
+                    value={newFee.frequency}
+                    onChange={(e) => setNewFee({...newFee, frequency: e.target.value})}
+                    className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm outline-none font-medium"
+                  >
+                    <option value="Semester">Semester</option>
+                    <option value="Annual">Annual</option>
+                    <option value="One-time">One-time</option>
+                    <option value="Monthly">Monthly</option>
+                  </select>
+                </div>
+              </div>
+              <div>
+                <label className="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-1.5">Amount (BDT)</label>
+                <input 
+                  required
+                  type="number" 
+                  value={newFee.amount}
+                  onChange={(e) => setNewFee({...newFee, amount: e.target.value})}
+                  placeholder="e.g. 5000"
+                  className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-primary/20 outline-none"
+                />
+              </div>
+              <div className="flex gap-3 pt-2">
+                <button 
+                  type="button"
+                  onClick={() => setIsModalOpen(false)}
+                  className="flex-1 py-3 border border-slate-200 rounded-xl text-sm font-bold text-slate-500 hover:bg-slate-50 transition-all cursor-pointer"
+                >
+                  Cancel
+                </button>
+                <button 
+                  type="submit"
+                  disabled={isSubmitting}
+                  className="flex-1 py-3 bg-primary text-white rounded-xl text-sm font-bold hover:bg-primary/90 transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
+                >
+                  {isSubmitting ? <Loader2 size={18} className="animate-spin" /> : "Save Fee Head"}
+                </button>
+              </div>
+            </form>
+          </motion.div>
+        </div>
+      )}
+
       {/* Stats Summary */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-        {stats.map((stat, i) => (
-          <motion.div
-            key={i}
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: i * 0.1 }}
-            className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm"
-          >
-            <div className="flex items-center justify-between mb-4">
-              <div className={`${stat.color} p-3 rounded-xl text-white shadow-lg shadow-current/10`}>
-                <stat.icon size={20} />
+        {stats.map((stat, i) => {
+          const Icon = iconMap[stat.icon] || DollarSign;
+          return (
+            <motion.div
+              key={i}
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: i * 0.1 }}
+              className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm"
+            >
+              <div className="flex items-center justify-between mb-4">
+                <div className={`${stat.color} p-3 rounded-xl text-white shadow-lg shadow-current/10`}>
+                  <Icon size={20} />
+                </div>
+                <ArrowUpRight size={14} className="text-slate-300" />
               </div>
-              <ArrowUpRight size={14} className="text-slate-300" />
-            </div>
-            <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">{stat.label}</p>
-            <p className="text-2xl font-bold text-slate-800 mt-1">{stat.value}</p>
-          </motion.div>
-        ))}
+              <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">{stat.label}</p>
+              <p className="text-2xl font-bold text-slate-800 mt-1">{stat.value}</p>
+            </motion.div>
+          );
+        })}
       </div>
 
       <div className="grid grid-cols-1 xl:grid-cols-4 gap-8">
@@ -89,6 +244,8 @@ export default function FeeStructureManagement() {
               <input 
                 type="text" 
                 placeholder="Search fee categories..." 
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
                 className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-primary/20 outline-none"
               />
             </div>
@@ -118,44 +275,54 @@ export default function FeeStructureManagement() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-50">
-                  {feeHeads.map((fee, i) => (
-                    <motion.tr 
-                      key={fee.id}
-                      initial={{ opacity: 0, x: -10 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      transition={{ delay: i * 0.05 }}
-                      className="hover:bg-slate-50/50 transition-colors group"
-                    >
-                      <td className="px-6 py-4">
-                        <div className="flex flex-col">
-                          <span className="text-sm font-bold text-slate-800 group-hover:text-primary transition-colors">{fee.name}</span>
-                          <span className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">{fee.id}</span>
-                        </div>
+                  {filteredFeeHeads.length > 0 ? (
+                    filteredFeeHeads.map((fee, i) => (
+                      <motion.tr 
+                        key={fee._id}
+                        initial={{ opacity: 0, x: -10 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ delay: i * 0.05 }}
+                        className="hover:bg-slate-50/50 transition-colors group"
+                      >
+                        <td className="px-6 py-4">
+                          <div className="flex flex-col">
+                            <span className="text-sm font-bold text-slate-800 group-hover:text-primary transition-colors">{fee.name}</span>
+                            <span className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">{fee._id.substring(0, 8)}</span>
+                          </div>
+                        </td>
+                        <td className="px-6 py-4">
+                          <div className="flex items-center gap-2 text-xs font-bold text-slate-600">
+                            <Building2 size={14} className="text-slate-300" />
+                            {fee.dept}
+                          </div>
+                        </td>
+                        <td className="px-6 py-4 text-right">
+                           <span className="text-sm font-extrabold text-slate-800">৳ {fee.amount.toLocaleString()}</span>
+                        </td>
+                        <td className="px-6 py-4 text-xs font-medium text-slate-500 uppercase">{fee.frequency}</td>
+                        <td className="px-6 py-4">
+                          <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold ${
+                            fee.status === "Active" ? "bg-emerald-100 text-emerald-700" : "bg-slate-100 text-slate-600"
+                          }`}>
+                            <div className={`w-1.5 h-1.5 rounded-full ${fee.status === "Active" ? "bg-emerald-500" : "bg-slate-400"}`} />
+                            {fee.status}
+                          </span>
+                        </td>
+                        <td className="px-6 py-4">
+                          <div className="flex items-center justify-center gap-2">
+                            <button className="p-2 text-slate-400 hover:text-amber-600 transition-all cursor-pointer"><Edit3 size={18} /></button>
+                            <button className="p-2 text-slate-400 hover:text-red-600 transition-all cursor-pointer"><Trash2 size={18} /></button>
+                          </div>
+                        </td>
+                      </motion.tr>
+                    ))
+                  ) : (
+                    <tr>
+                      <td colSpan={6} className="px-6 py-12 text-center text-slate-500 text-sm italic">
+                        No fee categories found. Add your first fee head to get started.
                       </td>
-                      <td className="px-6 py-4">
-                        <div className="flex items-center gap-2 text-xs font-bold text-slate-600">
-                          <Building2 size={14} className="text-slate-300" />
-                          {fee.dept}
-                        </div>
-                      </td>
-                      <td className="px-6 py-4 text-right">
-                         <span className="text-sm font-extrabold text-slate-800">৳ {fee.amount}</span>
-                      </td>
-                      <td className="px-6 py-4 text-xs font-medium text-slate-500 uppercase">{fee.frequency}</td>
-                      <td className="px-6 py-4">
-                        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-700">
-                          <div className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
-                          {fee.status}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4">
-                        <div className="flex items-center justify-center gap-2">
-                          <button className="p-2 text-slate-400 hover:text-amber-600 transition-all cursor-pointer"><Edit3 size={18} /></button>
-                          <button className="p-2 text-slate-400 hover:text-red-600 transition-all cursor-pointer"><Trash2 size={18} /></button>
-                        </div>
-                      </td>
-                    </motion.tr>
-                  ))}
+                    </tr>
+                  )}
                 </tbody>
               </table>
             </div>
