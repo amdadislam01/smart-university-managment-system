@@ -25,22 +25,57 @@ import {
 } from "lucide-react";
 import { motion } from "framer-motion";
 
-const payments = [
-  { id: "TXN-77401", student: "Md. Amin Islam", amount: "65,000", method: "bKash", date: "2026-04-25 10:15 AM", status: "Success", type: "Tuition" },
-  { id: "TXN-77402", student: "Sifat Rahman", amount: "72,500", method: "Bank Transfer", date: "2026-04-25 11:20 AM", status: "Success", type: "Admission" },
-  { id: "TXN-77403", student: "Jarin Tasnim", amount: "2,500", method: "Nagad", date: "2026-04-25 01:45 PM", status: "Pending", type: "Library Fine" },
-  { id: "TXN-77404", student: "Nabil Khan", amount: "12,000", method: "Visa Card", date: "2026-04-24 04:30 PM", status: "Success", type: "Lab Fee" },
-  { id: "TXN-77405", student: "Mitu Akter", amount: "65,000", method: "bKash", date: "2026-04-24 09:12 AM", status: "Failed", type: "Tuition" },
-];
-
-const stats = [
-  { label: "Today's Collection", value: "৳ 142,500", icon: DollarSign, color: "bg-emerald-500" },
-  { label: "Total Transactions", value: "842", icon: Zap, color: "bg-blue-500" },
-  { label: "Pending Verification", value: "18", icon: Clock, color: "bg-amber-500" },
-  { label: "Refund Requests", value: "4", icon: RefreshCcw, color: "bg-red-500" },
-];
-
 export default function PaymentTracking() {
+  const [loading, setLoading] = React.useState(true);
+  const [data, setData] = React.useState<any>({
+    payments: [],
+    stats: [],
+    methodBreakdown: []
+  });
+  const [searchTerm, setSearchTerm] = React.useState("");
+
+  const fetchPayments = async () => {
+    try {
+      setLoading(true);
+      const res = await fetch("/api/admin/financial/payments");
+      const result = await res.json();
+      if (result.payments) {
+        setData(result);
+      }
+    } catch (error) {
+      console.error("Failed to fetch payments:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  React.useEffect(() => {
+    fetchPayments();
+  }, []);
+
+  const getIcon = (iconName: string) => {
+    switch (iconName) {
+      case "DollarSign": return DollarSign;
+      case "Zap": return Zap;
+      case "Clock": return Clock;
+      case "RefreshCcw": return RefreshCcw;
+      default: return DollarSign;
+    }
+  };
+
+  const filteredPayments = data.payments.filter((txn: any) => 
+    txn.student.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    txn.id.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-8 pb-12">
       {/* Page Header */}
@@ -63,24 +98,27 @@ export default function PaymentTracking() {
 
       {/* Stats Summary */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-        {stats.map((stat, i) => (
-          <motion.div
-            key={i}
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: i * 0.1 }}
-            className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm"
-          >
-            <div className="flex items-center justify-between mb-4">
-              <div className={`${stat.color} p-3 rounded-xl text-white shadow-lg shadow-current/10`}>
-                <stat.icon size={20} />
+        {data.stats.map((stat: any, i: number) => {
+          const Icon = getIcon(stat.icon);
+          return (
+            <motion.div
+              key={i}
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: i * 0.1 }}
+              className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm"
+            >
+              <div className="flex items-center justify-between mb-4">
+                <div className={`${stat.color} p-3 rounded-xl text-white shadow-lg shadow-current/10`}>
+                  <Icon size={20} />
+                </div>
+                <TrendingUp size={16} className="text-emerald-500" />
               </div>
-              <TrendingUp size={16} className="text-emerald-500" />
-            </div>
-            <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">{stat.label}</p>
-            <p className="text-2xl font-bold text-slate-800 mt-1">{stat.value}</p>
-          </motion.div>
-        ))}
+              <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">{stat.label}</p>
+              <p className="text-2xl font-bold text-slate-800 mt-1">{stat.value}</p>
+            </motion.div>
+          );
+        })}
       </div>
 
       <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
@@ -93,6 +131,8 @@ export default function PaymentTracking() {
                 type="text" 
                 placeholder="Search transaction ID or student..." 
                 className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-primary/20 outline-none"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
               />
             </div>
             <div className="flex items-center gap-3">
@@ -120,7 +160,7 @@ export default function PaymentTracking() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-50">
-                  {payments.map((txn, i) => (
+                  {filteredPayments.map((txn: any, i: number) => (
                     <motion.tr 
                       key={txn.id}
                       initial={{ opacity: 0, x: -10 }}
@@ -143,7 +183,7 @@ export default function PaymentTracking() {
                       </td>
                       <td className="px-6 py-4">
                         <div className="flex items-center gap-2 text-[10px] font-bold text-slate-600">
-                           {txn.method.includes('bKash') || txn.method.includes('Nagad') ? <Smartphone size={14} className="text-slate-400" /> : <Building size={14} className="text-slate-400" />}
+                           {txn.method.toLowerCase().includes('bkash') || txn.method.toLowerCase().includes('nagad') ? <Smartphone size={14} className="text-slate-400" /> : <Building size={14} className="text-slate-400" />}
                            {txn.method}
                         </div>
                       </td>
@@ -197,11 +237,7 @@ export default function PaymentTracking() {
                 Method Breakdown
              </h3>
              <div className="space-y-4">
-                {[
-                  { name: "MFS (bKash/Nagad)", value: 65, color: "bg-primary" },
-                  { name: "Bank Transfer", value: 25, color: "bg-blue-500" },
-                  { name: "Card Payment", value: 10, color: "bg-emerald-500" },
-                ].map((item, i) => (
+                {data.methodBreakdown.map((item: any, i: number) => (
                   <div key={i} className="space-y-2">
                      <div className="flex justify-between text-[10px] font-bold text-slate-500 uppercase tracking-wider">
                         <span>{item.name}</span>
