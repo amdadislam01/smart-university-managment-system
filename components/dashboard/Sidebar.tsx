@@ -162,6 +162,7 @@ export const Sidebar = () => {
               src="/logo.png" 
               alt="Logo" 
               fill 
+              sizes="40px"
               className="object-contain p-1"
             />
           </div>
