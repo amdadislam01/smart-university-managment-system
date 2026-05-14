@@ -19,26 +19,120 @@ import {
   TrendingUp,
   ShieldCheck,
   Building2,
-  Users
+  Users,
+  X
 } from "lucide-react";
 import { motion } from "framer-motion";
 
-const invoices = [
-  { id: "INV-2026-001", student: "Md. Amin Islam", stuId: "STU-1001", amount: "65,000", dueDate: "2026-05-10", status: "Paid", method: "bKash" },
-  { id: "INV-2026-002", student: "Sifat Rahman", stuId: "STU-1002", amount: "72,500", dueDate: "2026-05-15", status: "Pending", method: "Bank" },
-  { id: "INV-2026-003", student: "Jarin Tasnim", stuId: "STU-1003", amount: "58,000", dueDate: "2026-04-30", status: "Overdue", method: "N/A" },
-  { id: "INV-2026-004", student: "Nabil Khan", stuId: "STU-1004", amount: "62,000", dueDate: "2026-05-12", status: "Paid", method: "Visa" },
-  { id: "INV-2026-005", student: "Mitu Akter", stuId: "STU-1005", amount: "65,000", dueDate: "2026-05-10", status: "Pending", method: "Nagad" },
-];
+// Removed static invoices data
 
-const stats = [
-  { label: "Total Generated", value: "3,120", icon: FileText, color: "bg-blue-500" },
-  { label: "Paid Invoices", value: "2,450", icon: CheckCircle2, color: "bg-emerald-500" },
-  { label: "Pending Payments", value: "542", icon: Clock, color: "bg-amber-500" },
-  { label: "Overdue", value: "128", icon: AlertCircle, color: "bg-red-500" },
-];
+// Removed static stats data
 
 export default function InvoiceManagement() {
+  const [loading, setLoading] = React.useState(true);
+  const [data, setData] = React.useState<any>({
+    invoices: [],
+    stats: [],
+    summary: { totalExpected: "0M", currentCollection: "0M" },
+    departmentalStatus: []
+  });
+
+  const [searchTerm, setSearchTerm] = React.useState("");
+  const [statusFilter, setStatusFilter] = React.useState("All Statuses");
+  const [showModal, setShowModal] = React.useState(false);
+  const [students, setStudents] = React.useState<any[]>([]);
+  const [isSubmitting, setIsSubmitting] = React.useState(false);
+  const [newInvoice, setNewInvoice] = React.useState({
+    studentId: "",
+    amount: "",
+    dueDate: new Date().toISOString().split('T')[0]
+  });
+
+  const fetchInvoices = async () => {
+    try {
+      setLoading(true);
+      const res = await fetch("/api/admin/financial/invoices");
+      const result = await res.json();
+      if (result.invoices) {
+        setData(result);
+      }
+    } catch (error) {
+      console.error("Failed to fetch invoices:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchStudents = async () => {
+    try {
+      const res = await fetch("/api/admin/students");
+      const result = await res.json();
+      setStudents(result);
+    } catch (error) {
+      console.error("Failed to fetch students:", error);
+    }
+  };
+
+  React.useEffect(() => {
+    fetchInvoices();
+    fetchStudents();
+  }, []);
+
+  const handleCreateInvoice = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newInvoice.studentId || !newInvoice.amount || !newInvoice.dueDate) return;
+
+    try {
+      setIsSubmitting(true);
+      const res = await fetch("/api/admin/financial/invoices", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(newInvoice)
+      });
+
+      if (res.ok) {
+        setShowModal(false);
+        setNewInvoice({ studentId: "", amount: "", dueDate: new Date().toISOString().split('T')[0] });
+        fetchInvoices();
+      }
+    } catch (error) {
+      console.error("Failed to create invoice:", error);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const getIcon = (iconName: string) => {
+    switch (iconName) {
+      case "FileText": return FileText;
+      case "CheckCircle2": return CheckCircle2;
+      case "Clock": return Clock;
+      case "AlertCircle": return AlertCircle;
+      default: return FileText;
+    }
+  };
+
+  const filteredInvoices = data.invoices.filter((inv: any) => {
+    const matchesSearch = inv.student.toLowerCase().includes(searchTerm.toLowerCase()) || 
+                         inv.stuId.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         inv.id.toLowerCase().includes(searchTerm.toLowerCase());
+    
+    const matchesStatus = statusFilter === "All Statuses" || 
+                         (statusFilter === "Paid Only" && inv.status === "Paid") ||
+                         (statusFilter === "Pending Only" && inv.status === "Pending") ||
+                         (statusFilter === "Overdue Only" && inv.status === "Overdue");
+
+    return matchesSearch && matchesStatus;
+  });
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-8 pb-12">
       {/* Page Header */}
@@ -52,7 +146,10 @@ export default function InvoiceManagement() {
             <Printer size={18} />
             Bulk Print
           </button>
-          <button className="flex items-center gap-2 px-6 py-2.5 bg-primary text-white rounded-xl text-sm font-bold hover:bg-primary/90 transition-all shadow-lg shadow-primary/20 cursor-pointer">
+          <button 
+            onClick={() => setShowModal(true)}
+            className="flex items-center gap-2 px-6 py-2.5 bg-primary text-white rounded-xl text-sm font-bold hover:bg-primary/90 transition-all shadow-lg shadow-primary/20 cursor-pointer"
+          >
             <Plus size={18} />
             Create Invoice
           </button>
@@ -61,21 +158,24 @@ export default function InvoiceManagement() {
 
       {/* Stats Summary */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-        {stats.map((stat, i) => (
-          <motion.div
-            key={i}
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ delay: i * 0.1 }}
-            className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm"
-          >
-            <div className={`${stat.color} w-10 h-10 rounded-xl flex items-center justify-center text-white mb-4 shadow-lg shadow-current/10`}>
-              <stat.icon size={20} />
-            </div>
-            <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">{stat.label}</p>
-            <p className="text-2xl font-bold text-slate-800 mt-1">{stat.value}</p>
-          </motion.div>
-        ))}
+        {data.stats.map((stat: any, i: number) => {
+          const Icon = getIcon(stat.icon);
+          return (
+            <motion.div
+              key={i}
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ delay: i * 0.1 }}
+              className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm"
+            >
+              <div className={`${stat.color} w-10 h-10 rounded-xl flex items-center justify-center text-white mb-4 shadow-lg shadow-current/10`}>
+                <Icon size={20} />
+              </div>
+              <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">{stat.label}</p>
+              <p className="text-2xl font-bold text-slate-800 mt-1">{stat.value}</p>
+            </motion.div>
+          );
+        })}
       </div>
 
       <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
@@ -88,13 +188,19 @@ export default function InvoiceManagement() {
                 type="text" 
                 placeholder="Search by student name or ID..." 
                 className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-primary/20 outline-none"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
               />
             </div>
             <div className="flex items-center gap-2">
                <button className="p-2.5 border border-slate-200 rounded-xl text-slate-500 hover:text-primary transition-colors cursor-pointer">
                 <Filter size={20} />
               </button>
-              <select className="px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm outline-none font-bold text-slate-600">
+              <select 
+                className="px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm outline-none font-bold text-slate-600"
+                value={statusFilter}
+                onChange={(e) => setStatusFilter(e.target.value)}
+              >
                 <option>All Statuses</option>
                 <option>Paid Only</option>
                 <option>Pending Only</option>
@@ -117,7 +223,7 @@ export default function InvoiceManagement() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-50">
-                  {invoices.map((inv, i) => (
+                  {filteredInvoices.map((inv: any, i: number) => (
                     <motion.tr 
                       key={inv.id}
                       initial={{ opacity: 0, x: -10 }}
@@ -172,11 +278,11 @@ export default function InvoiceManagement() {
                 <div className="space-y-4 mb-8">
                    <div className="flex justify-between items-end border-b border-white/10 pb-4">
                       <span className="text-xs text-slate-400">Total Expected</span>
-                      <span className="text-lg font-bold text-white">৳ 45.2M</span>
+                      <span className="text-lg font-bold text-white">৳ {data.summary.totalExpected}</span>
                    </div>
                    <div className="flex justify-between items-end border-b border-white/10 pb-4">
                       <span className="text-xs text-slate-400">Current Collection</span>
-                      <span className="text-lg font-bold text-emerald-400">৳ 38.8M</span>
+                      <span className="text-lg font-bold text-emerald-400">৳ {data.summary.currentCollection}</span>
                    </div>
                 </div>
                 <button className="w-full py-4 bg-secondary text-primary font-extrabold rounded-2xl hover:bg-white transition-all cursor-pointer flex items-center justify-center gap-2">
@@ -219,11 +325,7 @@ export default function InvoiceManagement() {
                 Departmental Status
              </h3>
              <div className="space-y-4">
-                {[
-                  { name: "CSE Dept", paid: 92 },
-                  { name: "EEE Dept", paid: 84 },
-                  { name: "BBA Dept", paid: 78 },
-                ].map((dept, i) => (
+                {data.departmentalStatus.map((dept: any, i: number) => (
                   <div key={i} className="space-y-2">
                      <div className="flex justify-between text-xs font-bold text-slate-700">
                         <span>{dept.name}</span>
@@ -242,6 +344,72 @@ export default function InvoiceManagement() {
           </div>
         </div>
       </div>
+
+      {/* Create Invoice Modal */}
+      {showModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm">
+          <motion.div 
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="bg-white rounded-3xl w-full max-w-md overflow-hidden shadow-2xl"
+          >
+            <div className="p-6 border-b border-slate-100 flex items-center justify-between">
+              <h2 className="text-xl font-bold text-slate-800">Create New Invoice</h2>
+              <button onClick={() => setShowModal(false)} className="p-2 hover:bg-slate-100 rounded-full text-slate-400 hover:text-slate-600 transition-all">
+                <X size={20} />
+              </button>
+            </div>
+            <form onSubmit={handleCreateInvoice} className="p-6 space-y-4">
+              <div>
+                <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Select Student</label>
+                <select 
+                  required
+                  className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm outline-none focus:ring-2 focus:ring-primary/20"
+                  value={newInvoice.studentId}
+                  onChange={(e) => setNewInvoice({ ...newInvoice, studentId: e.target.value })}
+                >
+                  <option value="">Choose a student...</option>
+                  {students.map(student => (
+                    <option key={student._id} value={student._id}>
+                      {student.name} ({student.studentId})
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Invoice Amount (BDT)</label>
+                <input 
+                  type="number" 
+                  required
+                  placeholder="e.g. 65000"
+                  className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm outline-none focus:ring-2 focus:ring-primary/20"
+                  value={newInvoice.amount}
+                  onChange={(e) => setNewInvoice({ ...newInvoice, amount: e.target.value })}
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Due Date</label>
+                <input 
+                  type="date" 
+                  required
+                  className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm outline-none focus:ring-2 focus:ring-primary/20"
+                  value={newInvoice.dueDate}
+                  onChange={(e) => setNewInvoice({ ...newInvoice, dueDate: e.target.value })}
+                />
+              </div>
+              <div className="pt-4">
+                <button 
+                  type="submit" 
+                  disabled={isSubmitting}
+                  className="w-full py-4 bg-primary text-white font-extrabold rounded-2xl hover:bg-primary/90 transition-all shadow-lg shadow-primary/20 flex items-center justify-center gap-2 disabled:opacity-50"
+                >
+                  {isSubmitting ? "Generating..." : "Generate Invoice"}
+                </button>
+              </div>
+            </form>
+          </motion.div>
+        </div>
+      )}
     </div>
   );
 }
