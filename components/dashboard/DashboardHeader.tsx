@@ -20,6 +20,7 @@ export const DashboardHeader = () => {
               src="/logo.png" 
               alt="Logo" 
               fill 
+              sizes="48px"
               className="object-contain"
             />
           </div>
