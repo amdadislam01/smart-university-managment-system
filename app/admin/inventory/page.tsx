@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
 import { 
   Package, 
   Plus, 
@@ -18,29 +18,64 @@ import {
   History
 } from "lucide-react";
 import { motion } from "framer-motion";
+import useSWR from "swr";
+import { toast } from "react-hot-toast";
 
-const stats = [
-  { label: "Total Assets", value: "1,240", icon: Box, color: "bg-blue-500", trend: "+5%" },
-  { label: "Low Stock Items", value: "12", icon: AlertTriangle, color: "bg-amber-500", trend: "Critical" },
-  { label: "In Maintenance", value: "8", icon: Activity, color: "bg-purple-500", trend: "-2%" },
-  { label: "Total Asset Value", value: "৳ 8.5M", icon: DollarSign, color: "bg-emerald-500", trend: "+12%" },
-];
-
-const inventory = [
-  { id: "AST-001", name: "Dell Latitude 5420", category: "Electronics", quantity: 45, unit: "Pcs", status: "In Stock", lastAudit: "2026-04-01" },
-  { id: "AST-002", name: "Ergonomic Office Chair", category: "Furniture", quantity: 120, unit: "Pcs", status: "In Stock", lastAudit: "2026-03-15" },
-  { id: "AST-003", name: "Digital Oscilloscope", category: "Lab Equipment", quantity: 5, unit: "Pcs", status: "Low Stock", lastAudit: "2026-04-10" },
-  { id: "AST-004", name: "Projector Screen (Motorized)", category: "Electronics", quantity: 0, unit: "Pcs", status: "Out of Stock", lastAudit: "2026-03-20" },
-  { id: "AST-005", name: "A4 Paper Reams", category: "Office Supplies", quantity: 250, unit: "Pack", status: "In Stock", lastAudit: "2026-04-20" },
-];
-
-const recentActivities = [
-  { action: "Issued", item: "Laptop (AST-001)", user: "Dr. Kamrul", date: "2026-04-25 10:00" },
-  { action: "Returned", item: "Projector (AST-084)", user: "Staff (Mitu)", date: "2026-04-25 09:30" },
-  { action: "Maintenance", item: "AC Unit (AST-112)", user: "Admin", date: "2026-04-24 14:00" },
-];
+const fetcher = (url: string) => fetch(url).then((res) => res.json());
 
 export default function InventoryPage() {
+  const { data, error, mutate } = useSWR("/api/admin/inventory", fetcher);
+
+  const [searchQuery, setSearchQuery] = useState("");
+  const [filter, setFilter] = useState("All Categories");
+
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [newAssetData, setNewAssetData] = useState({ itemName: "", category: "", quantity: 1, unit: "Pcs", location: "", status: "In Stock" });
+  const [isAdding, setIsAdding] = useState(false);
+
+  const handleAddAsset = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsAdding(true);
+    try {
+      const res = await fetch("/api/admin/inventory", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(newAssetData),
+      });
+      const result = await res.json();
+      if (result.success) {
+        toast.success("Asset added successfully");
+        setIsAddModalOpen(false);
+        setNewAssetData({ itemName: "", category: "", quantity: 1, unit: "Pcs", location: "", status: "In Stock" });
+        mutate();
+      } else {
+        toast.error(result.message || "Failed to add asset");
+      }
+    } catch (error) {
+      toast.error("An error occurred");
+    } finally {
+      setIsAdding(false);
+    }
+  };
+
+  if (error) return <div className="p-8 text-center text-red-500">Failed to load inventory data</div>;
+  if (!data) return <div className="p-8 text-center text-slate-500 animate-pulse">Loading inventory dashboard...</div>;
+
+  const { inventory: apiInventory, stats: apiStats, recentActivities: apiRecentActivities } = data.data;
+
+  const dynamicStats = [
+    { label: "Total Assets", value: apiStats.totalAssets.toLocaleString(), icon: Box, color: "bg-blue-500", trend: "+5%" },
+    { label: "Low Stock Items", value: apiStats.lowStock.toLocaleString(), icon: AlertTriangle, color: "bg-amber-500", trend: "Critical" },
+    { label: "In Maintenance", value: apiStats.maintenance.toLocaleString(), icon: Activity, color: "bg-purple-500", trend: "-2%" },
+    { label: "Total Asset Value", value: apiStats.totalValue, icon: DollarSign, color: "bg-emerald-500", trend: "+12%" },
+  ];
+
+  const filteredInventory = apiInventory.filter((item: any) => {
+    const term = searchQuery.toLowerCase();
+    const matchSearch = item.itemName?.toLowerCase().includes(term) || item._id?.toLowerCase().includes(term);
+    const matchFilter = filter === "All Categories" || item.category === filter;
+    return matchSearch && matchFilter;
+  });
   return (
     <div className="space-y-8 pb-12">
       {/* Page Header */}
@@ -54,7 +89,10 @@ export default function InventoryPage() {
             <ClipboardList size={16} />
             Inventory Audit
           </button>
-          <button className="flex items-center gap-2 px-4 py-2 bg-primary text-white rounded-lg text-sm font-medium hover:bg-primary/90 transition-colors shadow-lg shadow-primary/20 cursor-pointer">
+          <button 
+            onClick={() => setIsAddModalOpen(true)}
+            className="flex items-center gap-2 px-4 py-2 bg-primary text-white rounded-lg text-sm font-medium hover:bg-primary/90 transition-colors shadow-lg shadow-primary/20 cursor-pointer"
+          >
             <Plus size={16} />
             Add New Asset
           </button>
@@ -63,7 +101,7 @@ export default function InventoryPage() {
 
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        {stats.map((stat, i) => (
+        {dynamicStats.map((stat, i) => (
           <motion.div
             key={i}
             initial={{ opacity: 0, scale: 0.95 }}
@@ -95,6 +133,8 @@ export default function InventoryPage() {
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
               <input 
                 type="text" 
+                value={searchQuery}
+                onChange={e => setSearchQuery(e.target.value)}
                 placeholder="Search by name, ID or category..." 
                 className="w-full pl-9 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm outline-none focus:ring-2 focus:ring-primary/20"
               />
@@ -103,11 +143,16 @@ export default function InventoryPage() {
               <button className="p-2 border border-slate-200 rounded-lg text-slate-500 hover:text-primary transition-colors cursor-pointer">
                 <Filter size={18} />
               </button>
-              <select className="px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm outline-none">
+              <select 
+                value={filter}
+                onChange={e => setFilter(e.target.value)}
+                className="px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm outline-none"
+              >
                 <option>All Categories</option>
                 <option>Electronics</option>
                 <option>Furniture</option>
                 <option>Lab Equipment</option>
+                <option>Office Supplies</option>
               </select>
             </div>
           </div>
@@ -126,13 +171,13 @@ export default function InventoryPage() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-50">
-                  {inventory.map((item) => (
-                    <tr key={item.id} className="hover:bg-slate-50/50 transition-colors group">
-                      <td className="px-6 py-4 text-xs font-bold text-primary">{item.id}</td>
+                  {filteredInventory.map((item: any) => (
+                    <tr key={item._id} className="hover:bg-slate-50/50 transition-colors group">
+                      <td className="px-6 py-4 text-xs font-bold text-primary">{item._id.slice(-6).toUpperCase()}</td>
                       <td className="px-6 py-4">
                         <div className="flex flex-col">
-                          <span className="text-sm font-bold text-slate-800">{item.name}</span>
-                          <span className="text-[10px] text-slate-400">Last Audit: {item.lastAudit}</span>
+                          <span className="text-sm font-bold text-slate-800">{item.itemName}</span>
+                          <span className="text-[10px] text-slate-400">Added: {new Date(item.createdAt).toLocaleDateString()}</span>
                         </div>
                       </td>
                       <td className="px-6 py-4 text-xs font-medium text-slate-600">{item.category}</td>
@@ -142,9 +187,9 @@ export default function InventoryPage() {
                       <td className="px-6 py-4">
                         <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold ${
                           item.status === 'In Stock' ? 'bg-emerald-100 text-emerald-700' : 
-                          item.status === 'Low Stock' ? 'bg-amber-100 text-amber-700' : 'bg-red-100 text-red-700'
+                          item.status === 'Out of Stock' ? 'bg-red-100 text-red-700' : 'bg-amber-100 text-amber-700'
                         }`}>
-                          {item.status}
+                          {item.quantity > 0 && item.quantity <= 10 && item.status === 'In Stock' ? "Low Stock" : item.status}
                         </span>
                       </td>
                       <td className="px-6 py-4">
@@ -160,7 +205,7 @@ export default function InventoryPage() {
               </table>
             </div>
             <div className="p-4 bg-slate-50 border-t border-slate-100 flex items-center justify-between">
-              <span className="text-xs text-slate-500">Showing 5 of 1,240 assets</span>
+              <span className="text-xs text-slate-500">Showing {filteredInventory.length} of {apiStats.totalAssets} assets</span>
               <button className="text-xs text-primary font-bold hover:underline cursor-pointer">View Full Inventory</button>
             </div>
           </div>
@@ -174,7 +219,7 @@ export default function InventoryPage() {
               Recent Activities
             </h3>
             <div className="space-y-4">
-              {recentActivities.map((act, i) => (
+              {apiRecentActivities.map((act: any, i: number) => (
                 <div key={i} className="flex gap-3 items-start pb-4 border-b border-slate-50 last:border-0 last:pb-0">
                   <div className={`mt-1 w-2 h-2 rounded-full shrink-0 ${
                     act.action === 'Issued' ? 'bg-amber-500' : 
@@ -182,7 +227,7 @@ export default function InventoryPage() {
                   }`} />
                   <div>
                     <p className="text-xs font-bold text-slate-800">{act.action} - {act.item}</p>
-                    <p className="text-[10px] text-slate-500">{act.user} • {act.date}</p>
+                    <p className="text-[10px] text-slate-500">{act.user} • {new Date(act.date).toLocaleString()}</p>
                   </div>
                 </div>
               ))}
@@ -201,6 +246,75 @@ export default function InventoryPage() {
           </div>
         </div>
       </div>
+
+      {/* Add New Asset Modal */}
+      {isAddModalOpen && (
+        <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <motion.div 
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="bg-white rounded-2xl shadow-xl w-full max-w-md overflow-hidden"
+          >
+            <div className="p-6 border-b border-slate-100 flex justify-between items-center">
+              <h2 className="text-xl font-bold text-slate-800 flex items-center gap-2">
+                <Box size={20} className="text-primary" />
+                Add New Asset
+              </h2>
+              <button onClick={() => setIsAddModalOpen(false)} className="text-slate-400 hover:text-slate-600 text-2xl leading-none">
+                &times;
+              </button>
+            </div>
+            <form onSubmit={handleAddAsset} className="p-6 space-y-4">
+              <div>
+                <label className="text-xs font-bold text-slate-500 uppercase block mb-1.5">Item Name *</label>
+                <input required type="text" value={newAssetData.itemName} onChange={e => setNewAssetData({...newAssetData, itemName: e.target.value})} className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-primary/20 outline-none" placeholder="e.g. Dell Latitude 5420" />
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="text-xs font-bold text-slate-500 uppercase block mb-1.5">Category *</label>
+                  <select required value={newAssetData.category} onChange={e => setNewAssetData({...newAssetData, category: e.target.value})} className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-primary/20 outline-none">
+                    <option value="">Select...</option>
+                    <option value="Electronics">Electronics</option>
+                    <option value="Furniture">Furniture</option>
+                    <option value="Lab Equipment">Lab Equipment</option>
+                    <option value="Office Supplies">Office Supplies</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="text-xs font-bold text-slate-500 uppercase block mb-1.5">Location</label>
+                  <input type="text" value={newAssetData.location} onChange={e => setNewAssetData({...newAssetData, location: e.target.value})} className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-primary/20 outline-none" placeholder="e.g. IT Room" />
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="text-xs font-bold text-slate-500 uppercase block mb-1.5">Quantity *</label>
+                  <input required type="number" min="0" value={newAssetData.quantity} onChange={e => setNewAssetData({...newAssetData, quantity: parseInt(e.target.value)})} className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-primary/20 outline-none" />
+                </div>
+                <div>
+                  <label className="text-xs font-bold text-slate-500 uppercase block mb-1.5">Unit</label>
+                  <input type="text" value={newAssetData.unit} onChange={e => setNewAssetData({...newAssetData, unit: e.target.value})} className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-primary/20 outline-none" placeholder="e.g. Pcs, Pack" />
+                </div>
+              </div>
+              <div>
+                <label className="text-xs font-bold text-slate-500 uppercase block mb-1.5">Status</label>
+                <select value={newAssetData.status} onChange={e => setNewAssetData({...newAssetData, status: e.target.value})} className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-primary/20 outline-none">
+                  <option value="In Stock">In Stock</option>
+                  <option value="Out of Stock">Out of Stock</option>
+                  <option value="Under Maintenance">Under Maintenance</option>
+                </select>
+              </div>
+              <div className="pt-4 flex gap-3">
+                <button type="button" onClick={() => setIsAddModalOpen(false)} className="flex-1 px-4 py-2.5 border border-slate-200 text-slate-600 rounded-xl text-sm font-bold hover:bg-slate-50 transition-all cursor-pointer">
+                  Cancel
+                </button>
+                <button type="submit" disabled={isAdding} className="flex-1 px-4 py-2.5 bg-primary text-white rounded-xl text-sm font-bold hover:bg-primary/90 transition-all shadow-lg shadow-primary/20 cursor-pointer disabled:opacity-70">
+                  {isAdding ? "Saving..." : "Save Asset"}
+                </button>
+              </div>
+            </form>
+          </motion.div>
+        </div>
+      )}
     </div>
   );
 }
