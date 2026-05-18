@@ -1,6 +1,7 @@
 "use client";
 
 import React from "react";
+import useSWR from "swr";
 import { 
   Building2, 
   Bus, 
@@ -14,36 +15,89 @@ import {
   Navigation,
   Clock,
   Settings,
-  MoreVertical
+  MoreVertical,
+  X,
+  Loader2
 } from "lucide-react";
 import { motion } from "framer-motion";
 
-const hostelStats = [
-  { label: "Total Capacity", value: "850", icon: Bed, color: "bg-blue-100 text-blue-600" },
-  { label: "Occupied", value: "742", icon: Users, color: "bg-emerald-100 text-emerald-600" },
-  { label: "Available", value: "108", icon: Home, color: "bg-amber-100 text-amber-600" },
-];
-
-const transportStats = [
-  { label: "Total Vehicles", value: "24", icon: Bus, color: "bg-purple-100 text-purple-600" },
-  { label: "Active Routes", value: "12", icon: Navigation, color: "bg-orange-100 text-orange-600" },
-  { label: "Subscribed", value: "1,240", icon: Users, color: "bg-indigo-100 text-indigo-600" },
-];
-
-const hostels = [
-  { name: "Shaheed Minar Hall", type: "Boys", capacity: 300, occupied: 285, status: "Full" },
-  { name: "Begum Rokeya Hall", type: "Girls", capacity: 250, occupied: 210, status: "Available" },
-  { name: "International Hostel", type: "Mixed", capacity: 100, occupied: 45, status: "Available" },
-];
-
-const busRoutes = [
-  { route: "Route A (Mirpur-10)", vehicle: "Bus-04", time: "07:30 AM", students: 45, status: "On Time" },
-  { route: "Route B (Uttara)", vehicle: "Bus-07", time: "07:15 AM", students: 52, status: "Delayed" },
-  { route: "Route C (Dhanmondi)", vehicle: "Bus-12", time: "07:45 AM", students: 38, status: "On Time" },
-];
+const fetcher = (url: string) => fetch(url).then((res) => res.json());
 
 export default function HostelTransportPage() {
   const [activeTab, setActiveTab] = React.useState<"hostel" | "transport">("hostel");
+  const [isHostelModalOpen, setIsHostelModalOpen] = React.useState(false);
+  const [hostelForm, setHostelForm] = React.useState({ name: '', type: 'Boys', capacity: '', occupied: 0, status: 'Available' });
+  const [isRouteModalOpen, setIsRouteModalOpen] = React.useState(false);
+  const [routeForm, setRouteForm] = React.useState({ route: '', vehicle: '', time: '', students: 0, status: 'On Time' });
+  const [isSubmitting, setIsSubmitting] = React.useState(false);
+
+  const { data: hostelData, isLoading: hostelLoading, mutate: mutateHostels } = useSWR("/api/admin/hostels", fetcher);
+  const { data: transportData, isLoading: transportLoading, mutate: mutateTransport } = useSWR("/api/admin/transport", fetcher);
+
+  const handleAddHostel = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsSubmitting(true);
+    try {
+      const res = await fetch("/api/admin/hostels", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          ...hostelForm,
+          capacity: Number(hostelForm.capacity),
+          occupied: Number(hostelForm.occupied)
+        })
+      });
+      if (res.ok) {
+        mutateHostels();
+        setIsHostelModalOpen(false);
+        setHostelForm({ name: '', type: 'Boys', capacity: '', occupied: 0, status: 'Available' });
+      }
+    } catch (error) {
+      console.error(error);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleAddRoute = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsSubmitting(true);
+    try {
+      const res = await fetch("/api/admin/transport", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          ...routeForm,
+          students: Number(routeForm.students)
+        })
+      });
+      if (res.ok) {
+        mutateTransport();
+        setIsRouteModalOpen(false);
+        setRouteForm({ route: '', vehicle: '', time: '', students: 0, status: 'On Time' });
+      }
+    } catch (error) {
+      console.error(error);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const hostels: any[] = hostelData?.data?.hostels || [];
+  const hStats = hostelData?.data?.stats || { totalCapacity: 0, occupied: 0, available: 0 };
+  const hostelStats = [
+    { label: "Total Capacity", value: hStats.totalCapacity.toString(), icon: Bed, color: "bg-blue-100 text-blue-600" },
+    { label: "Occupied", value: hStats.occupied.toString(), icon: Users, color: "bg-emerald-100 text-emerald-600" },
+    { label: "Available", value: hStats.available.toString(), icon: Home, color: "bg-amber-100 text-amber-600" },
+  ];
+
+  const busRoutes: any[] = transportData?.data?.routes || [];
+  const tStats = transportData?.data?.stats || { totalVehicles: 0, activeRoutes: 0, subscribed: 0 };
+  const transportStats = [
+    { label: "Total Vehicles", value: tStats.totalVehicles.toString(), icon: Bus, color: "bg-purple-100 text-purple-600" },
+    { label: "Active Routes", value: tStats.activeRoutes.toString(), icon: Navigation, color: "bg-orange-100 text-orange-600" },
+    { label: "Subscribed", value: tStats.subscribed.toString(), icon: Users, color: "bg-indigo-100 text-indigo-600" },
+  ];
 
   return (
     <div className="space-y-8 pb-12">
@@ -102,7 +156,10 @@ export default function HostelTransportPage() {
                   <Building2 size={20} className="text-primary" />
                   Hostel Inventory
                 </h3>
-                <button className="flex items-center gap-2 px-4 py-2 bg-slate-50 text-slate-600 rounded-lg text-xs font-bold hover:bg-primary hover:text-white transition-all cursor-pointer">
+                <button 
+                  onClick={() => setIsHostelModalOpen(true)}
+                  className="flex items-center gap-2 px-4 py-2 bg-slate-50 text-slate-600 rounded-lg text-xs font-bold hover:bg-primary hover:text-white transition-all cursor-pointer"
+                >
                   <Plus size={14} />
                   Add Hostel
                 </button>
@@ -211,7 +268,10 @@ export default function HostelTransportPage() {
                 </h3>
                 <div className="flex gap-2">
                    <button className="p-2 border border-slate-200 rounded-lg hover:bg-slate-50 text-slate-500 cursor-pointer"><Search size={16} /></button>
-                   <button className="flex items-center gap-2 px-4 py-2 bg-primary text-white rounded-lg text-xs font-bold shadow-lg shadow-primary/20 cursor-pointer">
+                   <button 
+                    onClick={() => setIsRouteModalOpen(true)}
+                    className="flex items-center gap-2 px-4 py-2 bg-primary text-white rounded-lg text-xs font-bold shadow-lg shadow-primary/20 cursor-pointer"
+                  >
                     <Plus size={14} />
                     New Route
                   </button>
@@ -277,6 +337,205 @@ export default function HostelTransportPage() {
             </div>
           </div>
         </motion.div>
+      )}
+
+      {/* Add Hostel Modal */}
+      {isHostelModalOpen && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <motion.div 
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="bg-white rounded-2xl shadow-xl w-full max-w-md overflow-hidden"
+          >
+            <div className="p-6 border-b border-slate-100 flex justify-between items-center">
+              <h3 className="font-bold text-slate-800">Add New Hostel</h3>
+              <button 
+                onClick={() => setIsHostelModalOpen(false)}
+                className="text-slate-400 hover:text-slate-600 cursor-pointer"
+              >
+                <X size={20} />
+              </button>
+            </div>
+            <form onSubmit={handleAddHostel} className="p-6 space-y-4">
+              <div>
+                <label className="text-xs font-bold text-slate-500 uppercase block mb-2">Hostel Name</label>
+                <input 
+                  required
+                  type="text"
+                  value={hostelForm.name}
+                  onChange={(e) => setHostelForm({...hostelForm, name: e.target.value})}
+                  className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary"
+                  placeholder="e.g. Shaheed Minar Hall"
+                />
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="text-xs font-bold text-slate-500 uppercase block mb-2">Type</label>
+                  <select 
+                    value={hostelForm.type}
+                    onChange={(e) => setHostelForm({...hostelForm, type: e.target.value})}
+                    className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary"
+                  >
+                    <option value="Boys">Boys</option>
+                    <option value="Girls">Girls</option>
+                    <option value="Mixed">Mixed</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="text-xs font-bold text-slate-500 uppercase block mb-2">Status</label>
+                  <select 
+                    value={hostelForm.status}
+                    onChange={(e) => setHostelForm({...hostelForm, status: e.target.value})}
+                    className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary"
+                  >
+                    <option value="Available">Available</option>
+                    <option value="Full">Full</option>
+                    <option value="Maintenance">Maintenance</option>
+                  </select>
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="text-xs font-bold text-slate-500 uppercase block mb-2">Capacity</label>
+                  <input 
+                    required
+                    type="number"
+                    value={hostelForm.capacity}
+                    onChange={(e) => setHostelForm({...hostelForm, capacity: e.target.value})}
+                    className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary"
+                    placeholder="Total beds"
+                  />
+                </div>
+                <div>
+                  <label className="text-xs font-bold text-slate-500 uppercase block mb-2">Occupied</label>
+                  <input 
+                    required
+                    type="number"
+                    value={hostelForm.occupied}
+                    onChange={(e) => setHostelForm({...hostelForm, occupied: Number(e.target.value)})}
+                    className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary"
+                    placeholder="Filled beds"
+                  />
+                </div>
+              </div>
+              <div className="pt-4 flex gap-3">
+                <button
+                  type="button"
+                  onClick={() => setIsHostelModalOpen(false)}
+                  className="flex-1 px-4 py-2.5 text-slate-500 font-bold text-sm bg-slate-100 hover:bg-slate-200 rounded-xl transition-all cursor-pointer"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={isSubmitting}
+                  className="flex-1 px-4 py-2.5 text-white font-bold text-sm bg-primary hover:bg-primary/90 rounded-xl transition-all shadow-lg shadow-primary/20 flex items-center justify-center gap-2 cursor-pointer disabled:opacity-70"
+                >
+                  {isSubmitting ? <Loader2 size={16} className="animate-spin" /> : "Save Hostel"}
+                </button>
+              </div>
+            </form>
+          </motion.div>
+        </div>
+      )}
+
+      {/* Add Route Modal */}
+      {isRouteModalOpen && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <motion.div 
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="bg-white rounded-2xl shadow-xl w-full max-w-md overflow-hidden"
+          >
+            <div className="p-6 border-b border-slate-100 flex justify-between items-center">
+              <h3 className="font-bold text-slate-800">Add New Route</h3>
+              <button 
+                onClick={() => setIsRouteModalOpen(false)}
+                className="text-slate-400 hover:text-slate-600 cursor-pointer"
+              >
+                <X size={20} />
+              </button>
+            </div>
+            <form onSubmit={handleAddRoute} className="p-6 space-y-4">
+              <div>
+                <label className="text-xs font-bold text-slate-500 uppercase block mb-2">Route Name</label>
+                <input 
+                  required
+                  type="text"
+                  value={routeForm.route}
+                  onChange={(e) => setRouteForm({...routeForm, route: e.target.value})}
+                  className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary"
+                  placeholder="e.g. Route A (Mirpur-10)"
+                />
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="text-xs font-bold text-slate-500 uppercase block mb-2">Vehicle ID</label>
+                  <input 
+                    required
+                    type="text"
+                    value={routeForm.vehicle}
+                    onChange={(e) => setRouteForm({...routeForm, vehicle: e.target.value})}
+                    className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary"
+                    placeholder="e.g. Bus-04"
+                  />
+                </div>
+                <div>
+                  <label className="text-xs font-bold text-slate-500 uppercase block mb-2">Status</label>
+                  <select 
+                    value={routeForm.status}
+                    onChange={(e) => setRouteForm({...routeForm, status: e.target.value})}
+                    className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary"
+                  >
+                    <option value="On Time">On Time</option>
+                    <option value="Delayed">Delayed</option>
+                    <option value="Cancelled">Cancelled</option>
+                  </select>
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="text-xs font-bold text-slate-500 uppercase block mb-2">Departure Time</label>
+                  <input 
+                    required
+                    type="text"
+                    value={routeForm.time}
+                    onChange={(e) => setRouteForm({...routeForm, time: e.target.value})}
+                    className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary"
+                    placeholder="e.g. 07:30 AM"
+                  />
+                </div>
+                <div>
+                  <label className="text-xs font-bold text-slate-500 uppercase block mb-2">Subscribed Students</label>
+                  <input 
+                    required
+                    type="number"
+                    value={routeForm.students}
+                    onChange={(e) => setRouteForm({...routeForm, students: Number(e.target.value)})}
+                    className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary"
+                    placeholder="Number"
+                  />
+                </div>
+              </div>
+              <div className="pt-4 flex gap-3">
+                <button
+                  type="button"
+                  onClick={() => setIsRouteModalOpen(false)}
+                  className="flex-1 px-4 py-2.5 text-slate-500 font-bold text-sm bg-slate-100 hover:bg-slate-200 rounded-xl transition-all cursor-pointer"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={isSubmitting}
+                  className="flex-1 px-4 py-2.5 text-white font-bold text-sm bg-primary hover:bg-primary/90 rounded-xl transition-all shadow-lg shadow-primary/20 flex items-center justify-center gap-2 cursor-pointer disabled:opacity-70"
+                >
+                  {isSubmitting ? <Loader2 size={16} className="animate-spin" /> : "Save Route"}
+                </button>
+              </div>
+            </form>
+          </motion.div>
+        </div>
       )}
     </div>
   );
