@@ -3,6 +3,7 @@
 import React, { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { 
   GraduationCap, 
@@ -20,6 +21,7 @@ import {
 import { cn } from "@/lib/utils";
 
 export default function StudentLoginPage() {
+  const router = useRouter();
   const [studentId, setStudentId] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -33,13 +35,14 @@ export default function StudentLoginPage() {
     
     // Simulate login delay
     setTimeout(() => {
-      // For demonstration, show an error if ID is empty
-      if (!studentId) {
-        setError("Please enter your Student ID");
-        setIsLoading(false);
+      if ((studentId === "STU001" || studentId === "STU002" || studentId === "STU003" || studentId === "2026-123") && password === "student123") {
+        // Set cookie for student session (valid for 1 day). 
+        // If 2026-123 is entered, fallback to STU001 to match database records.
+        const actualId = studentId === "2026-123" ? "STU001" : studentId;
+        document.cookie = `student_session=${actualId}; path=/; max-age=86400`;
+        router.push("/student/dashboard");
       } else {
-        // Here you would normally handle the login logic
-        console.log("Logging in...", { studentId, password });
+        setError("Invalid Student ID or Password. (Hint: ID: STU001, Pass: student123)");
         setIsLoading(false);
       }
     }, 1500);
@@ -156,7 +159,12 @@ export default function StudentLoginPage() {
 
               <div className="mb-10 text-center lg:text-left">
                 <h3 className="text-3xl font-black text-white uppercase tracking-tight mb-2">Student <span className="text-secondary">Login</span></h3>
-                <p className="text-white/50 text-sm font-medium">Please enter your credentials to continue</p>
+                <p className="text-white/50 text-sm font-medium mb-6">Please enter your credentials to continue</p>
+                
+                <div className="p-4 bg-white/5 border border-white/10 rounded-2xl text-white/70 text-xs font-semibold leading-relaxed text-left">
+                  <span className="text-secondary font-bold">Demo Credentials:</span><br/>
+                  Student ID: <code className="text-white bg-white/15 px-1.5 py-0.5 rounded font-mono select-all">STU001</code> <span className="text-white/30 mx-1">|</span> Password: <code className="text-white bg-white/15 px-1.5 py-0.5 rounded font-mono select-all">student123</code>
+                </div>
               </div>
 
               <form onSubmit={handleSubmit} className="space-y-6">
