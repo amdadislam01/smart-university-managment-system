@@ -14,10 +14,21 @@ export function middleware(request: NextRequest) {
     }
   }
 
+  // Check if the user is trying to access any /student route
+  if (pathname.startsWith("/student")) {
+    const studentSession = request.cookies.get("student_session");
+
+    // If no session cookie is found, redirect to login
+    if (!studentSession) {
+      const loginUrl = new URL("/login/student", request.url);
+      return NextResponse.redirect(loginUrl);
+    }
+  }
+
   return NextResponse.next();
 }
 
 // See "Matching Paths" below to learn more
 export const config = {
-  matcher: "/admin/:path*",
+  matcher: ["/admin/:path*", "/student/:path*"],
 };
