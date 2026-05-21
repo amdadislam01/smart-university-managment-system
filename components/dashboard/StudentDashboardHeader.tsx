@@ -4,10 +4,18 @@ import React from "react";
 import { Search, Bell, Settings, User, LogOut, Mail, HelpCircle } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
+import { useRouter } from "next/navigation";
 
 export const StudentDashboardHeader = () => {
+  const router = useRouter();
   const [showProfileMenu, setShowProfileMenu] = React.useState(false);
   const [showNotifications, setShowNotifications] = React.useState(false);
+
+  const handleLogout = () => {
+    // Clear the student session cookie
+    document.cookie = "student_session=; path=/; expires=Thu, 01 Jan 1970 00:00:00 UTC";
+    router.push("/login/student");
+  };
 
   return (
     <header className="h-16 border-b border-gray-200 bg-white flex items-center justify-between px-8 sticky top-0 z-30">
@@ -83,7 +91,7 @@ export const StudentDashboardHeader = () => {
             </div>
             <div className="hidden sm:block text-left">
               <p className="text-sm font-semibold text-gray-900 leading-tight">Md Amin</p>
-              <p className="text-[10px] text-gray-500">Student ID: 2023-0123</p>
+              <p className="text-[10px] text-gray-500">Student ID: 2026-123</p>
             </div>
           </button>
 
@@ -113,7 +121,10 @@ export const StudentDashboardHeader = () => {
                     Help Center
                   </button>
                   <div className="h-px bg-gray-100 my-1 mx-2" />
-                  <button className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 transition-colors">
+                  <button 
+                    onClick={handleLogout}
+                    className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 transition-colors"
+                  >
                     <LogOut size={16} />
                     Sign Out
                   </button>
