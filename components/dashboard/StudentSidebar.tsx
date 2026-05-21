@@ -3,7 +3,7 @@
 import React from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { 
   LayoutDashboard, 
   UserCircle, 
@@ -88,6 +88,13 @@ const studentMenuItems = [
 
 export const StudentSidebar = () => {
   const pathname = usePathname();
+  const router = useRouter();
+
+  const handleLogout = () => {
+    // Clear the student session cookie
+    document.cookie = "student_session=; path=/; expires=Thu, 01 Jan 1970 00:00:00 UTC";
+    router.push("/login/student");
+  };
 
   return (
     <aside className="w-64 h-full bg-primary text-white flex flex-col overflow-hidden shadow-xl border-r border-white/10">
@@ -144,7 +151,10 @@ export const StudentSidebar = () => {
 
       {/* Logout */}
       <div className="p-4 border-t border-white/10">
-        <button className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-red-500/10 hover:text-red-400 w-full transition-all cursor-pointer">
+        <button 
+          onClick={handleLogout}
+          className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-red-500/10 hover:text-red-400 w-full transition-all cursor-pointer"
+        >
           <LogOut size={20} />
           <span className="text-sm font-medium">Logout</span>
         </button>
