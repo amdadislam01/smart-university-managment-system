@@ -8,6 +8,14 @@ const StudentSchema = new mongoose.Schema(
     classId: { type: mongoose.Schema.Types.ObjectId, ref: "Class" },
     sectionId: { type: mongoose.Schema.Types.ObjectId, ref: "Section" },
     status: { type: String, enum: ["Active", "Inactive"], default: "Active" },
+    phone: { type: String, default: "" },
+    address: { type: String, default: "" },
+    about: { type: String, default: "" },
+    linkedin: { type: String, default: "" },
+    github: { type: String, default: "" },
+    twitter: { type: String, default: "" },
+    website: { type: String, default: "" },
+    avatar: { type: String, default: "" },
   },
   { timestamps: true }
 );
