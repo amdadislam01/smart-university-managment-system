@@ -49,10 +49,11 @@ export async function GET() {
     }
 
     // Fetch academic results to get current and trends
-    const results = await db.collection("results").find({ studentId: student._id }).sort({ createdAt: -1 }).toArray();
+    const results = await db.collection("results").find({ studentId: { $in: [student._id, student._id.toString()] } }).sort({ createdAt: -1 }).toArray();
     let cgpa = 3.65; // fallback
     if (results.length > 0) {
-      cgpa = results[0].cgpa || results[0].gpa || results[0].avgGpa || 3.65;
+      const rawCgpa = results[0].cgpa || results[0].gpa || results[0].avgGpa || 3.65;
+      cgpa = typeof rawCgpa === "number" ? rawCgpa : parseFloat(rawCgpa) || 3.65;
     }
 
     // Fallbacks or calculations for academic metrics
