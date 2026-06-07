@@ -24,31 +24,36 @@ export async function GET() {
       return NextResponse.json({ error: "Student not found" }, { status: 404 });
     }
 
+    const studentIdQuery = { $in: [student._id, student._id.toString()] };
+
     // 1. Fetch academic results to get current and trends
-    const results = await db.collection("results").find({ studentId: student._id }).sort({ createdAt: -1 }).toArray();
+    const results = await db.collection("results").find({ studentId: studentIdQuery }).sort({ createdAt: -1 }).toArray();
     let cgpa = 3.65; // fallback
     let cgpaTrend = "+0.15";
     if (results.length > 0) {
-      cgpa = results[0].cgpa || results[0].gpa || 3.65;
+      const rawCgpa = results[0].cgpa || results[0].gpa || 3.65;
+      cgpa = typeof rawCgpa === "number" ? rawCgpa : parseFloat(rawCgpa) || 3.65;
       if (results.length > 1) {
-        const diff = (results[0].cgpa || 0) - (results[1].cgpa || 0);
+        const rawPrevCgpa = results[1].cgpa || results[1].gpa || 0;
+        const prevCgpa = typeof rawPrevCgpa === "number" ? rawPrevCgpa : parseFloat(rawPrevCgpa) || 0;
+        const diff = cgpa - prevCgpa;
         cgpaTrend = diff >= 0 ? `+${diff.toFixed(2)}` : `${diff.toFixed(2)}`;
       }
     }
 
     // 2. Fetch attendance stats
-    const totalAttendance = await db.collection("attendances").countDocuments({ studentId: student._id });
-    const presentAttendance = await db.collection("attendances").countDocuments({ studentId: student._id, status: "Present" });
+    const totalAttendance = await db.collection("attendances").countDocuments({ studentId: studentIdQuery });
+    const presentAttendance = await db.collection("attendances").countDocuments({ studentId: studentIdQuery, status: "Present" });
     const attendancePercentage = totalAttendance > 0 ? Math.round((presentAttendance / totalAttendance) * 100) : 87;
     const attendanceTrend = "+2%";
 
     // 3. Fetch financial information
-    const fees = await db.collection("fees").find({ studentId: student._id }).toArray();
+    const fees = await db.collection("fees").find({ studentId: studentIdQuery }).toArray();
     const unpaidFees = fees.filter(f => f.status === "Unpaid");
     const totalDueAmount = unpaidFees.reduce((sum, f) => sum + (f.dueAmount || f.amount || 0), 0);
     
     // Check if there are fines
-    const fines = await db.collection("fines").find({ studentId: student._id, status: "Unpaid" }).toArray();
+    const fines = await db.collection("fines").find({ studentId: studentIdQuery, status: "Unpaid" }).toArray();
     const totalFines = fines.reduce((sum, f) => sum + (f.amount || 0), 0);
     const grandTotalDue = totalDueAmount + totalFines;
 
@@ -75,10 +80,14 @@ export async function GET() {
     const alerts = await db.collection("alerts").find({ isRead: false }).sort({ createdAt: -1 }).toArray();
 
     // 5. Fetch courses from routine
-    const routines = await db.collection("routines").find({ 
-      classId: student.classId, 
-      sectionId: student.sectionId 
-    }).toArray();
+    const routinesQuery: any = {};
+    if (student.classId) {
+      routinesQuery.classId = { $in: [student.classId, student.classId.toString()] };
+    }
+    if (student.sectionId) {
+      routinesQuery.sectionId = { $in: [student.sectionId, student.sectionId.toString()] };
+    }
+    const routines = await db.collection("routines").find(routinesQuery).toArray();
 
     // 6. Fetch upcoming exams first to combine course queries
     const dbExams = await db.collection("exams").find({ status: "Scheduled" }).toArray();
