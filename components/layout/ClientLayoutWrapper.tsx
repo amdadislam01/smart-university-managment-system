@@ -8,8 +8,8 @@ import { Toaster } from "react-hot-toast";
 
 export default function ClientLayoutWrapper({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
-  const isAdminRoute = pathname?.startsWith("/admin");
-  const isStudentRoute = pathname?.startsWith("/student");
+  const isAdminRoute = pathname === "/admin" || pathname?.startsWith("/admin/");
+  const isStudentRoute = pathname === "/student" || pathname?.startsWith("/student/");
 
   if (isAdminRoute || isStudentRoute) {
     return (
