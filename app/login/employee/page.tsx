@@ -31,33 +31,35 @@ export default function EmployeeLoginPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
     setError("");
     
-    // Simulate login delay
-    setTimeout(() => {
-      if (isAdminLogin) {
-        if (adminEmail === "admin@nub.edu.bd" && password === "admin123") {
-          // Set cookie for session
-          document.cookie = "admin_session=true; path=/; max-age=3600"; // 1 hour session
-          router.push("/admin/dashboard");
-        } else {
-          setError("Invalid Admin Credentials");
-          setIsLoading(false);
-        }
-      } else {
-        if (!employeeId) {
-          setError("Please enter your Employee ID");
-          setIsLoading(false);
-        } else {
-          // Placeholder for employee login
-          setError("Employee login is currently disabled. Use Admin Login.");
-          setIsLoading(false);
-        }
+    try {
+      const res = await fetch("/api/auth/login", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          emailOrId: isAdminLogin ? adminEmail : employeeId,
+          password: password,
+          role: isAdminLogin ? "Admin" : "Employee",
+        }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        throw new Error(data.error || "Login failed");
       }
-    }, 1500);
+
+      router.push(data.redirect);
+    } catch (err: any) {
+      setError(err.message || "Invalid Credentials");
+      setIsLoading(false);
+    }
   };
 
   return (
