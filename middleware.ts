@@ -4,7 +4,7 @@ export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
   // Check if the user is trying to access any /admin route
-  if (pathname.startsWith("/admin")) {
+  if (pathname === "/admin" || pathname.startsWith("/admin/")) {
     const adminSession = request.cookies.get("admin_session");
 
     // If no session cookie is found, redirect to login
@@ -15,7 +15,7 @@ export function middleware(request: NextRequest) {
   }
 
   // Check if the user is trying to access any /student route
-  if (pathname.startsWith("/student")) {
+  if (pathname === "/student" || pathname.startsWith("/student/")) {
     const studentSession = request.cookies.get("student_session");
 
     // If no session cookie is found, redirect to login
