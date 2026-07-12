@@ -28,24 +28,35 @@ export default function StudentLoginPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
     setError("");
     
-    // Simulate login delay
-    setTimeout(() => {
-      if ((studentId === "STU001" || studentId === "STU002" || studentId === "STU003" || studentId === "2026-123") && password === "student123") {
-        // Set cookie for student session (valid for 1 day). 
-        // If 2026-123 is entered, fallback to STU001 to match database records.
-        const actualId = studentId === "2026-123" ? "STU001" : studentId;
-        document.cookie = `student_session=${actualId}; path=/; max-age=86400`;
-        router.push("/student/dashboard");
-      } else {
-        setError("Invalid Student ID or Password. (Hint: ID: STU001, Pass: student123)");
-        setIsLoading(false);
+    try {
+      const res = await fetch("/api/auth/login", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          emailOrId: studentId,
+          password: password,
+          role: "Student",
+        }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        throw new Error(data.error || "Login failed");
       }
-    }, 1500);
+
+      router.push(data.redirect);
+    } catch (err: any) {
+      setError(err.message || "Invalid Student ID or Password.");
+      setIsLoading(false);
+    }
   };
 
   return (
