@@ -6,7 +6,7 @@
 [![MongoDB](https://img.shields.io/badge/MongoDB-Latest-47A248?style=for-the-badge&logo=mongodb&logoColor=white)](https://www.mongodb.com/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.0-3178C6?style=for-the-badge&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
 
-A comprehensive, modern, and highly scalable **University Management System** designed to streamline academic, administrative, and financial operations. Built with a premium UI/UX experience and robust backend architecture.
+A comprehensive, modern, and highly scalable **University Management System** designed to streamline academic, administrative, and financial operations.Built with a premium UI/UX experience and robust backend architecture.
 
 ---
 
