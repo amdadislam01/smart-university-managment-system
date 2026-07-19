@@ -1,4 +1,4 @@
-# 🎓 Smar University Management System (SUMS)
+# 🎓 Smart University Management System (SUMS)
 
 [![Next.js](https://img.shields.io/badge/Next.js-15+-000000?style=for-the-badge&logo=nextdotjs&logoColor=white)](https://nextjs.org/)
 [![React](https://img.shields.io/badge/React-19-61DAFB?style=for-the-badge&logo=react&logoColor=black)](https://reactjs.org/)
